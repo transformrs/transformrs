@@ -38,4 +38,5 @@ fn read_key() -> Key {
 fn main() {
     println!("Hello, world!");
     let key = read_key();
+    println!("Key: {}", key.key);
 }
