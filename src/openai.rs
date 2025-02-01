@@ -4,6 +4,7 @@ use crate::Provider;
 use reqwest;
 use reqwest::header::HeaderMap;
 use reqwest::header::HeaderValue;
+use reqwest::Response;
 use serde_json::Value;
 
 fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn std::error::Error + Send + Sync>> {
@@ -16,24 +17,18 @@ fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn std::error::Error + S
     Ok(headers)
 }
 
-/// Chat completion for OpenAI-compatible providers.
-///
-/// To get the text, use [chat_completion_content].
 pub async fn chat_completion(
     key: &Key,
     provider: &Provider,
+    model: &str,
+    stream: bool,
     messages: &[Message],
-) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<Response, Box<dyn std::error::Error + Send + Sync>> {
     let address = format!("{}chat/completions", provider.url());
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        "Authorization",
-        HeaderValue::from_str(&format!("Bearer {}", key.key))?,
-    );
-    headers.insert("Content-Type", HeaderValue::from_str("application/json")?);
     let body = serde_json::json!({
-        "model": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-        "messages": messages
+        "model": model,
+        "messages": messages,
+        "stream": stream,
     });
     let client = reqwest::Client::new();
     let resp = client
@@ -42,13 +37,14 @@ pub async fn chat_completion(
         .json(&body)
         .send()
         .await?;
-    let json = resp.json::<Value>().await?;
-    Ok(json)
+    Ok(resp)
 }
 
-pub fn chat_completion_content(
-    json: &Value,
+/// Get the content of a non-streaming chat completion.
+pub async fn chat_completion_content(
+    resp: Response,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    let json = resp.json::<Value>().await?;
     let content = json
         .get("choices")
         .expect("expected choices")

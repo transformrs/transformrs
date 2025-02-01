@@ -18,9 +18,10 @@ async fn test_chat_completion() {
     ];
     let key = aiapi::read_key();
     let provider = Provider::DeepInfra;
-    let result = openai::chat_completion(&key, &provider, &messages).await;
-    let response = result.unwrap();
-    println!("Response: {:?}", response);
-    let content = openai::chat_completion_content(&response).unwrap();
+    let model = "meta-llama/Llama-3.3-70B-Instruct-Turbo";
+    let resp = openai::chat_completion(&key, &provider, model, false, &messages).await;
+    let resp = resp.unwrap();
+    let content = openai::chat_completion_content(resp).await;
+    let content = content.unwrap();
     assert_eq!(content, "hello");
 }
