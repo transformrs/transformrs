@@ -1,16 +1,41 @@
+pub mod openai;
+
+use serde::Deserialize;
+use serde::Serialize;
 use std::fs::File;
 use std::io::Read;
 
-enum Api {
+pub enum Api {
     OpenAI,
 }
 
-struct Key {
-    api: Api,
-    key: String,
+pub enum Provider {
+    OpenAI,
+    DeepInfra,
 }
 
-fn read_key() -> Key {
+impl Provider {
+    pub fn url(&self) -> String {
+        match self {
+            Provider::OpenAI => "https://api.openai.com/v1/",
+            Provider::DeepInfra => "https://api.deepinfra.com/v1/openai/",
+        }
+        .to_string()
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Message {
+    pub role: String,
+    pub content: String,
+}
+
+pub struct Key {
+    pub api: Api,
+    pub key: String,
+}
+
+pub fn read_key() -> Key {
     let mut env_content = String::new();
     if let Ok(mut file) = File::open(".env") {
         file.read_to_string(&mut env_content)
@@ -33,10 +58,4 @@ fn read_key() -> Key {
         api: Api::OpenAI,
         key,
     }
-}
-
-fn main() {
-    println!("Hello, world!");
-    let key = read_key();
-    println!("Key: {}", key.key);
 }
