@@ -6,10 +6,20 @@ use reqwest::header::HeaderMap;
 use reqwest::header::HeaderValue;
 use serde_json::Value;
 
+fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn std::error::Error + Send + Sync>> {
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Authorization",
+        HeaderValue::from_str(&format!("Bearer {}", key.key))?,
+    );
+    headers.insert("Content-Type", HeaderValue::from_str("application/json")?);
+    Ok(headers)
+}
+
 /// Chat completion for OpenAI-compatible providers.
 ///
-/// To get just the text, use
-pub async fn openai_chat_completion(
+/// To get the text, use [chat_completion_content].
+pub async fn chat_completion(
     key: &Key,
     provider: &Provider,
     messages: &[Message],
@@ -28,7 +38,7 @@ pub async fn openai_chat_completion(
     let client = reqwest::Client::new();
     let resp = client
         .post(address)
-        .headers(headers)
+        .headers(request_headers(key)?)
         .json(&body)
         .send()
         .await?;
@@ -36,7 +46,7 @@ pub async fn openai_chat_completion(
     Ok(json)
 }
 
-pub fn openai_chat_completion_content(
+pub fn chat_completion_content(
     json: &Value,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let content = json
