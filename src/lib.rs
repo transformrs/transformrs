@@ -8,7 +8,7 @@ use std::io::Read;
 pub enum Api {
     /// The OpenAI API. Most providers (partially) support this.
     OpenAI,
-    /// The DeepInfra API. This is the non-OpenAI-compatible API.
+    /// The DeepInfra API. This is their non-OpenAI-compatible API.
     DeepInfra,
 }
 
@@ -16,6 +16,21 @@ pub enum Api {
 pub enum Provider {
     OpenAI,
     DeepInfra,
+    Groq,
+    Azure,
+    Amazon,
+    TogetherAI,
+    Fireworks,
+    FriendliAI,
+    Hyperbolic,
+    Nebius,
+    Novita,
+}
+
+impl std::fmt::Display for Provider {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }
 
 impl Provider {
@@ -26,8 +41,20 @@ impl Provider {
                 Api::OpenAI => "https://api.deepinfra.com/v1/openai/",
                 Api::DeepInfra => "https://api.deepinfra.com/v1/",
             },
+            Provider::Groq => "https://api.groq.com/openai/v1/",
+            Provider::Azure => "https://api.azure.com/v1/",
+            Provider::Amazon => "https://api.amazon.com/v1/",
+            Provider::TogetherAI => "https://api.together.ai/v1/",
+            Provider::Fireworks => "https://api.fireworks.ai/v1/",
+            Provider::FriendliAI => "https://api.friendli.ai/v1/",
+            Provider::Hyperbolic => "https://api.hyperbolic.xyz/v1/",
+            Provider::Nebius => "https://api.nebi.us/v1/",
+            Provider::Novita => "https://api.novita.ai/v1/",
         }
         .to_string()
+    }
+    pub fn key_name(&self) -> String {
+        self.to_string().to_uppercase() + "_KEY"
     }
 }
 
@@ -80,15 +107,15 @@ pub fn read_keys() -> Keys {
 
     let mut keys = vec![];
     for line in env_content.lines() {
-        if line.starts_with("OPENAI_KEY=") {
+        if line.starts_with(&Provider::OpenAI.key_name()) {
             keys.push(Key {
                 provider: Provider::OpenAI,
-                key: read_key(line, "OPENAI_KEY"),
+                key: read_key(line, &Provider::OpenAI.key_name()),
             });
-        } else if line.starts_with("DEEPINFRA_KEY=") {
+        } else if line.starts_with(&Provider::DeepInfra.key_name()) {
             keys.push(Key {
                 provider: Provider::DeepInfra,
-                key: read_key(line, "DEEPINFRA_KEY"),
+                key: read_key(line, &Provider::DeepInfra.key_name()),
             });
         }
     }
