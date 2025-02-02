@@ -1,11 +1,26 @@
 pub mod openai;
+pub mod tts;
 
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
+use reqwest::header::HeaderMap;
+use reqwest::header::HeaderValue;
+use std::error::Error;
 
+pub(crate) fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn Error + Send + Sync>> {
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        "Authorization",
+        HeaderValue::from_str(&format!("Bearer {}", key.key))?,
+    );
+    headers.insert("Content-Type", HeaderValue::from_str("application/json")?);
+    Ok(headers)
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum Api {
     /// The OpenAI API. Most providers (partially) support this.
     OpenAI,
