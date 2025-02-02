@@ -26,7 +26,7 @@ let resp = openai::chat_completion(&key, model, &messages)
 assert_eq!(resp.choices[0].message.content, "hello world");
 ```
 
-More detailled examples can be found in the tests:
+More detailed examples can be found in the tests:
 
 - [openai.rs](tests/openai.rs) - Usage for endpoints that are OpenAI-compatible (supports OpenAI, DeepInfra, etc.).
 
