@@ -10,7 +10,7 @@ use transformrs::Provider;
 
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct-Turbo";
 
-async fn test_chat_completion(
+async fn chat_completion_no_stream_helper(
     key: &Key,
     model: &str,
     messages: &[Message],
@@ -45,9 +45,28 @@ async fn test_chat_completion_no_stream() {
     let futures = providers.iter().map(|(provider, model)| {
         let key = keys.for_provider(&provider).unwrap();
         let messages = messages.clone();
-        async move { test_chat_completion(&key, &model, &messages).await }
+        async move { chat_completion_no_stream_helper(&key, &model, &messages).await }
     });
     futures::future::try_join_all(futures).await.unwrap();
+}
+
+async fn chat_completion_stream_helper(
+    key: &Key,
+    model: &str,
+    messages: &[Message],
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let mut stream = openai::stream_chat_completion(&key, model, &messages)
+        .await
+        .unwrap();
+    let mut content = String::new();
+    while let Some(resp) = stream.next().await {
+        let resp = resp.unwrap();
+        assert_eq!(resp.choices.len(), 1);
+        let chunk = resp.choices[0].delta.content.clone().unwrap_or_default();
+        content += &chunk;
+    }
+    assert_eq!(content, "hello world");
+    Ok(())
 }
 
 #[tokio::test]
@@ -67,18 +86,10 @@ async fn test_chat_completion_stream() {
         },
     ];
     let keys = transformrs::load_keys(".env");
-    for (provider, model) in providers {
+    let futures = providers.iter().map(|(provider, model)| {
         let key = keys.for_provider(&provider).unwrap();
-        let mut stream = openai::stream_chat_completion(&key, model, &messages)
-            .await
-            .unwrap();
-        let mut content = String::new();
-        while let Some(resp) = stream.next().await {
-            let resp = resp.unwrap();
-            assert_eq!(resp.choices.len(), 1);
-            let chunk = resp.choices[0].delta.content.clone().unwrap_or_default();
-            content += &chunk;
-        }
-        assert_eq!(content, "hello world");
-    }
+        let messages = messages.clone();
+        async move { chat_completion_stream_helper(&key, &model, &messages).await }
+    });
+    futures::future::try_join_all(futures).await.unwrap();
 }
