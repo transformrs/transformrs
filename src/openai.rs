@@ -1,6 +1,6 @@
+use crate::Api;
 use crate::Key;
 use crate::Message;
-use crate::Provider;
 use futures::Stream;
 use futures::StreamExt;
 use futures::TryStreamExt;
@@ -10,6 +10,8 @@ use reqwest::header::HeaderValue;
 use reqwest::Response;
 use serde_json::Value;
 use std::pin::Pin;
+
+const API: Api = Api::OpenAI;
 
 fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn std::error::Error + Send + Sync>> {
     let mut headers = HeaderMap::new();
@@ -23,12 +25,12 @@ fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn std::error::Error + S
 
 pub async fn chat_completion(
     key: &Key,
-    provider: &Provider,
     model: &str,
     stream: bool,
     messages: &[Message],
 ) -> Result<Response, Box<dyn std::error::Error + Send + Sync>> {
-    let address = format!("{}chat/completions", provider.url());
+    // Using the OpenAI-compatible API.
+    let address = format!("{}chat/completions", key.provider.url(&API));
     let body = serde_json::json!({
         "model": model,
         "messages": messages,

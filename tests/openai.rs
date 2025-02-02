@@ -21,8 +21,7 @@ async fn test_chat_completion() {
         },
     ];
     let key = aiapi::read_key();
-    let provider = Provider::DeepInfra;
-    let resp = openai::chat_completion(&key, &provider, MODEL, false, &messages).await;
+    let resp = openai::chat_completion(&key, &MODEL, false, &messages).await;
     let resp = resp.unwrap();
     let json = resp.json::<Value>().await.unwrap();
     let content = openai::chat_completion_content(json).await;
@@ -44,7 +43,7 @@ async fn test_chat_completion_stream() {
     ];
     let key = aiapi::read_key();
     let provider = Provider::DeepInfra;
-    let resp = openai::chat_completion(&key, &provider, MODEL, true, &messages).await;
+    let resp = openai::chat_completion(&key, MODEL, true, &messages).await;
     let resp = resp.unwrap();
     let mut stream = openai::chat_completion_stream(resp).await.unwrap();
     let mut content = String::new();

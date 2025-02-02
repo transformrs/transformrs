@@ -6,7 +6,10 @@ use std::fs::File;
 use std::io::Read;
 
 pub enum Api {
+    /// The OpenAI API. Most providers (partially) support this.
     OpenAI,
+    /// The DeepInfra API. This is the non-OpenAI-compatible API.
+    DeepInfra,
 }
 
 pub enum Provider {
@@ -15,10 +18,13 @@ pub enum Provider {
 }
 
 impl Provider {
-    pub fn url(&self) -> String {
+    pub fn url(&self, api: &Api) -> String {
         match self {
             Provider::OpenAI => "https://api.openai.com/v1/",
-            Provider::DeepInfra => "https://api.deepinfra.com/v1/openai/",
+            Provider::DeepInfra => match api {
+                Api::OpenAI => "https://api.deepinfra.com/v1/openai/",
+                Api::DeepInfra => "https://api.deepinfra.com/v1/",
+            },
         }
         .to_string()
     }
@@ -31,7 +37,7 @@ pub struct Message {
 }
 
 pub struct Key {
-    pub api: Api,
+    pub provider: Provider,
     pub key: String,
 }
 
@@ -55,7 +61,7 @@ pub fn read_key() -> Key {
         });
 
     Key {
-        api: Api::OpenAI,
+        provider: Provider::DeepInfra,
         key,
     }
 }

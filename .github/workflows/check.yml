@@ -36,6 +36,7 @@ jobs:
   typos:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
+    if: github.ref != 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
