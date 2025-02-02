@@ -12,6 +12,7 @@ pub enum Api {
     DeepInfra,
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum Provider {
     OpenAI,
     DeepInfra,
@@ -36,12 +37,39 @@ pub struct Message {
     pub content: String,
 }
 
+#[derive(Clone, Debug)]
 pub struct Key {
     pub provider: Provider,
     pub key: String,
 }
 
-pub fn read_key() -> Key {
+#[derive(Clone, Debug)]
+pub struct Keys {
+    keys: Vec<Key>,
+}
+
+impl Keys {
+    pub fn for_provider(&self, provider: &Provider) -> Option<Key> {
+        self.keys
+            .iter()
+            .find(|key| key.provider == *provider)
+            .cloned()
+    }
+}
+
+fn read_key(content: &str, name: &str) -> String {
+    content
+        .lines()
+        .find(|line| line.starts_with(name))
+        .and_then(|line| line.split('=').nth(1))
+        .map(|key| key.trim().to_string())
+        .unwrap_or_else(|| {
+            println!("Error: DEEPINFRA_KEY not found in .env file");
+            String::new()
+        })
+}
+
+pub fn read_keys() -> Keys {
     let mut env_content = String::new();
     if let Ok(mut file) = File::open(".env") {
         file.read_to_string(&mut env_content)
@@ -50,18 +78,19 @@ pub fn read_key() -> Key {
         panic!("Error: .env file not found");
     }
 
-    let key = env_content
-        .lines()
-        .find(|line| line.starts_with("DEEPINFRA_KEY="))
-        .and_then(|line| line.split('=').nth(1))
-        .map(|key| key.trim().to_string())
-        .unwrap_or_else(|| {
-            println!("Error: DEEPINFRA_KEY not found in .env file");
-            String::new()
-        });
-
-    Key {
-        provider: Provider::DeepInfra,
-        key,
+    let mut keys = vec![];
+    for line in env_content.lines() {
+        if line.starts_with("OPENAI_KEY=") {
+            keys.push(Key {
+                provider: Provider::OpenAI,
+                key: read_key(line, "OPENAI_KEY"),
+            });
+        } else if line.starts_with("DEEPINFRA_KEY=") {
+            keys.push(Key {
+                provider: Provider::DeepInfra,
+                key: read_key(line, "DEEPINFRA_KEY"),
+            });
+        }
     }
+    Keys { keys }
 }

@@ -6,7 +6,7 @@ Add support for multiple AI API providers inside your application.
 
 To see how to use this library, see the tests:
 
-- [openai.rs](tests/openai.rs) - Usage for endpoints that are OpenAI-compatible.
+- [openai.rs](tests/openai.rs) - Usage for endpoints that are OpenAI-compatible (support DeepInfra, OpenAI, 
 
 ## Why was this Project Created?
 

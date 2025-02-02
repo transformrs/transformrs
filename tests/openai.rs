@@ -2,6 +2,7 @@ extern crate aiapi;
 
 use aiapi::openai;
 use aiapi::Message;
+use aiapi::Provider;
 use futures_util::stream::StreamExt;
 use serde_json::Value;
 
@@ -19,7 +20,8 @@ async fn test_chat_completion() {
             content: "This is a test. Please respond with 'hello world'.".to_string(),
         },
     ];
-    let key = aiapi::read_key();
+    let keys = aiapi::read_keys();
+    let key = keys.for_provider(&Provider::DeepInfra).unwrap();
     let resp = openai::chat_completion(&key, &MODEL, false, &messages).await;
     let resp = resp.unwrap();
     let json = resp.json::<Value>().await.unwrap();
@@ -40,7 +42,8 @@ async fn test_chat_completion_stream() {
             content: "This is a test. Please respond with 'hello world'.".to_string(),
         },
     ];
-    let key = aiapi::read_key();
+    let keys = aiapi::read_keys();
+    let key = keys.for_provider(&Provider::DeepInfra).unwrap();
     let resp = openai::chat_completion(&key, MODEL, true, &messages).await;
     let resp = resp.unwrap();
     let mut stream = openai::chat_completion_stream(resp).await.unwrap();
