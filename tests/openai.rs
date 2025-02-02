@@ -9,7 +9,7 @@ use serde_json::Value;
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct-Turbo";
 
 #[tokio::test]
-async fn test_chat_completion() {
+async fn test_chat_completion_no_stream() {
     let messages = vec![
         Message {
             role: "system".to_string(),
@@ -22,10 +22,13 @@ async fn test_chat_completion() {
     ];
     let keys = aiapi::read_keys();
     let key = keys.for_provider(&Provider::DeepInfra).unwrap();
-    let resp = openai::chat_completion(&key, &MODEL, &messages).await;
-    let completion = resp.unwrap();
-    println!("{:?}", completion);
-    // assert!(completion.id.len() > 0);
+    let resp = openai::chat_completion(&key, &MODEL, &messages)
+        .await
+        .unwrap();
+    println!("{:?}", resp);
+    assert_eq!(resp.object, "chat.completion");
+    assert_eq!(resp.choices.len(), 1);
+    assert_eq!(resp.choices[0].message.content, "hello world");
 }
 
 #[tokio::test]

@@ -49,9 +49,21 @@ async fn request_chat_completion(
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct Choice {
+    pub index: u64,
+    pub message: Message,
+    pub finish_reason: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ChatCompletion {
     pub id: String,
     pub object: String,
+    pub created: u64,
+    pub model: String,
+    pub system_fingerprint: Option<String>,
+    pub choices: Vec<Choice>,
+    pub service_tier: Option<String>,
 }
 
 pub async fn chat_completion(
