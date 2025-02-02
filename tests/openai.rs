@@ -15,7 +15,7 @@ async fn test_chat_completion() {
         },
         Message {
             role: "user".to_string(),
-            content: "This is a test. Please respond with 'hello'.".to_string(),
+            content: "This is a test. Please respond with 'hello world'.".to_string(),
         },
     ];
     let key = aiapi::read_key();
@@ -26,7 +26,7 @@ async fn test_chat_completion() {
     let json = resp.json::<Value>().await.unwrap();
     let content = openai::chat_completion_content(json).await;
     let content = content.unwrap();
-    assert_eq!(content, "hello");
+    assert_eq!(content, "hello world");
 }
 
 #[tokio::test]
@@ -38,7 +38,7 @@ async fn test_chat_completion_stream() {
         },
         Message {
             role: "user".to_string(),
-            content: "This is a test. Please respond with 'hello'.".to_string(),
+            content: "This is a test. Please respond with 'hello world'.".to_string(),
         },
     ];
     let key = aiapi::read_key();
@@ -47,11 +47,12 @@ async fn test_chat_completion_stream() {
     let resp = openai::chat_completion(&key, &provider, model, true, &messages).await;
     let resp = resp.unwrap();
     let mut stream = openai::chat_completion_stream(resp).await.unwrap();
+    let mut content = String::new();
     while let Some(json) = stream.next().await {
-        let content = openai::chat_completion_stream_content(json.unwrap())
+        let chunk = openai::chat_completion_stream_content(json.unwrap())
             .await
             .unwrap();
-        println!("Chunk: {:?}", content);
+        content += &chunk;
     }
-    assert!(false);
+    assert_eq!(content, "hello world");
 }

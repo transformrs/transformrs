@@ -63,11 +63,15 @@ pub async fn chat_completion_content(
 pub async fn chat_completion_stream_content(
     json: Value,
 ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let content = json
+    let choice = json
         .get("choices")
         .expect("expected choices")
         .get(0)
-        .unwrap()
+        .unwrap();
+    if choice.get("finish_reason") != Some(&Value::Null) {
+        return Ok("".to_string());
+    }
+    let content = choice
         .get("delta")
         .expect("expected delta")
         .get("content")
@@ -99,7 +103,6 @@ pub async fn chat_completion_stream(
                             if json_str == "[DONE]" {
                                 return None;
                             }
-                            println!("Json: {:?}", json_str);
                             Some(serde_json::from_str::<Value>(json_str).map_err(|e| {
                                 Box::new(e) as Box<dyn std::error::Error + Send + Sync>
                             }))
