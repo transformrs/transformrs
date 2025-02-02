@@ -21,6 +21,8 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - run: echo "DEEPINFRA_KEY=${{ secrets.DEEPINFRA_KEY }}" > .env
+
       - run: rustup toolchain install ${{ env.RUST_TOOLCHAIN }}
 
       # Compile, but don't run.
@@ -51,8 +53,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - run: rustup toolchain install stable
-
-      - run: rustup component add clippy rustfmt
 
       - run: cargo fmt --all --check
 

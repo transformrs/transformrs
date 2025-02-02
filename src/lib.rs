@@ -46,11 +46,11 @@ pub fn read_key() -> Key {
 
     let key = env_content
         .lines()
-        .find(|line| line.starts_with("API_KEY="))
+        .find(|line| line.starts_with("DEEPINFRA_KEY="))
         .and_then(|line| line.split('=').nth(1))
         .map(|key| key.trim().to_string())
         .unwrap_or_else(|| {
-            println!("Error: API_KEY not found in .env file");
+            println!("Error: DEEPINFRA_KEY not found in .env file");
             String::new()
         });
 
