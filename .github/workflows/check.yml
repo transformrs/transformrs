@@ -52,7 +52,7 @@ jobs:
 
       - run: rustup toolchain install stable
 
-      - run: rustup component add clippy, rustfmt
+      - run: rustup component add clippy rustfmt
 
       - run: cargo fmt --all --check
 
