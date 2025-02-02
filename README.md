@@ -34,9 +34,9 @@ More detailled examples can be found in the tests:
 
 I was looking into making a command line tool that could summarize PDF files.
 Then I noticed that I probably needed to use a cloud provider.
-But then I would need to support multiple providers in order to give the user a choice.
-This library is the result of that.
-It provides the interface to multiple cloud providers, so that applications can be built on top.
+However, then I would be requiring myself and users to use the same cloud provider.
+This library is avoids that.
+It provides the interface to multiple cloud providers, so that users can choose their favourite provider.
 
 ## Cloud versus Local
 
@@ -67,3 +67,9 @@ What I hope is that we will see many more "core utilities" like `cat`, `ls`, and
 As pointed out above, it is unlikely that these utilities will run the models locally.
 Instead, it's more likely that they will be built on top of the cloud providers.
 One example of this is [llm](https://github.com/simonw/llm) by Simon Willison.
+Examples I'd like to see are PDF summarizers, PDF to text, and more.
+
+## Why the name transformrs?
+
+Essentially AI is about transforming data, so I called this library `transformrs` as "Transformations in Rust".
+It's also a play on the word "transformers" which is an important algorithm in AI.
