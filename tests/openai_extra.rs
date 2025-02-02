@@ -21,9 +21,9 @@ async fn test_chat_completion_stream_duration() {
     ];
     let keys = aiapi::read_keys();
     let key = keys.for_provider(&Provider::DeepInfra).unwrap();
-    let resp = openai::chat_completion(&key, &MODEL, true, &messages).await;
-    let resp = resp.unwrap();
-    let mut stream = openai::chat_completion_stream(resp).await.unwrap();
+    let mut stream = openai::chat_completion_stream(&key, &MODEL, &messages)
+        .await
+        .unwrap();
     let mut content = String::new();
     let mut timestamps = Vec::new();
     while let Some(json) = stream.next().await {

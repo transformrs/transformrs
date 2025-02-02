@@ -8,6 +8,8 @@ use reqwest;
 use reqwest::header::HeaderMap;
 use reqwest::header::HeaderValue;
 use reqwest::Response;
+use serde::Deserialize;
+use serde::Serialize;
 use serde_json::Value;
 use std::pin::Pin;
 
@@ -23,7 +25,7 @@ fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn std::error::Error + S
     Ok(headers)
 }
 
-pub async fn chat_completion(
+async fn request_chat_completion(
     key: &Key,
     model: &str,
     stream: bool,
@@ -44,6 +46,65 @@ pub async fn chat_completion(
         .send()
         .await?;
     Ok(resp)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ChatCompletion {
+    pub id: String,
+    pub object: String,
+}
+
+pub async fn chat_completion(
+    key: &Key,
+    model: &str,
+    messages: &[Message],
+) -> Result<ChatCompletion, Box<dyn std::error::Error + Send + Sync>> {
+    let stream = false;
+    let resp = request_chat_completion(key, model, stream, messages).await?;
+    let json = resp.json::<ChatCompletion>().await?;
+    Ok(json)
+}
+
+/// Convert a streaming response into an iterator of JSON messages.
+/// Each message represents a complete chunk from the stream.
+pub async fn chat_completion_stream(
+    key: &Key,
+    model: &str,
+    messages: &[Message],
+) -> Result<
+    Pin<Box<dyn Stream<Item = Result<Value, Box<dyn std::error::Error + Send + Sync>>> + Send>>,
+    Box<dyn std::error::Error + Send + Sync>,
+> {
+    let resp = request_chat_completion(key, model, true, messages).await?;
+    let stream = resp
+        .bytes_stream()
+        .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+        .flat_map(|chunk_result| {
+            let chunk = chunk_result.unwrap();
+            let text = String::from_utf8_lossy(&chunk);
+            // Split on "data: " prefix and filter empty lines
+            let results: Vec<_> =
+                text.lines()
+                    .filter(|line| !line.is_empty())
+                    .filter_map(|line| {
+                        if let Some(stripped) = line.strip_prefix("data: ") {
+                            let json_str = stripped;
+                            if json_str == "[DONE]" {
+                                return None;
+                            }
+                            Some(serde_json::from_str::<Value>(json_str).map_err(|e| {
+                                Box::new(e) as Box<dyn std::error::Error + Send + Sync>
+                            }))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+
+            futures::stream::iter(results)
+        });
+
+    Ok(Box::pin(stream))
 }
 
 /// Get the content of a non-streaming chat completion.
@@ -79,43 +140,4 @@ pub async fn chat_completion_stream_content(
         .get("content")
         .expect("expected content");
     Ok(content.as_str().unwrap().to_string())
-}
-
-/// Convert a streaming response into an iterator of JSON messages.
-/// Each message represents a complete chunk from the stream.
-pub async fn chat_completion_stream(
-    resp: Response,
-) -> Result<
-    Pin<Box<dyn Stream<Item = Result<Value, Box<dyn std::error::Error + Send + Sync>>> + Send>>,
-    Box<dyn std::error::Error + Send + Sync>,
-> {
-    let stream = resp
-        .bytes_stream()
-        .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
-        .flat_map(|chunk_result| {
-            let chunk = chunk_result.unwrap();
-            let text = String::from_utf8_lossy(&chunk);
-            // Split on "data: " prefix and filter empty lines
-            let results: Vec<_> =
-                text.lines()
-                    .filter(|line| !line.is_empty())
-                    .filter_map(|line| {
-                        if let Some(stripped) = line.strip_prefix("data: ") {
-                            let json_str = stripped;
-                            if json_str == "[DONE]" {
-                                return None;
-                            }
-                            Some(serde_json::from_str::<Value>(json_str).map_err(|e| {
-                                Box::new(e) as Box<dyn std::error::Error + Send + Sync>
-                            }))
-                        } else {
-                            None
-                        }
-                    })
-                    .collect();
-
-            futures::stream::iter(results)
-        });
-
-    Ok(Box::pin(stream))
 }
