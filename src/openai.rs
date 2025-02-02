@@ -1,3 +1,4 @@
+use crate::request_headers;
 use crate::Api;
 use crate::Key;
 use crate::Message;
@@ -5,7 +6,6 @@ use futures::Stream;
 use futures::StreamExt;
 use futures::TryStreamExt;
 use reqwest;
-use crate::request_headers;
 use reqwest::Response;
 use serde::Deserialize;
 use serde::Serialize;

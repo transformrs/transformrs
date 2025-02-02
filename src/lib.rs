@@ -1,14 +1,14 @@
 pub mod openai;
 pub mod tts;
 
+use reqwest::header::HeaderMap;
+use reqwest::header::HeaderValue;
 use serde::Deserialize;
 use serde::Serialize;
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs::File;
 use std::io::Read;
-use reqwest::header::HeaderMap;
-use reqwest::header::HeaderValue;
-use std::error::Error;
 
 pub(crate) fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn Error + Send + Sync>> {
     let mut headers = HeaderMap::new();

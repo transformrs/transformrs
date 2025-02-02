@@ -1,12 +1,12 @@
 //! Text-to-speech.
-//! 
+//!
 //! Functionality related to text-to-speech.
 
+use crate::request_headers;
+use crate::Api;
 use crate::Key;
 use crate::Provider;
-use crate::request_headers;
 use base64::prelude::*;
-use crate::Api;
 use reqwest;
 use serde::Deserialize;
 use serde::Serialize;
@@ -14,21 +14,10 @@ use std::error::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TTSConfig {
-    model: String,
-    output_format: Option<String>,
-    preset_voice: Option<String>,
-    speed: Option<f32>,
-}
-
-impl TTSConfig {    
-    pub fn new(model: &str, output_format: Option<&str>, preset_voice: Option<&str>, speed: Option<f32>) -> Self {
-        Self {
-            model: model.to_string(),
-            output_format: output_format.map(|s| s.to_string()),
-            preset_voice: preset_voice.map(|s| s.to_string()),
-            speed,
-        }
-    }
+    pub model: String,
+    pub output_format: Option<String>,
+    pub preset_voice: Option<String>,
+    pub speed: Option<f32>,
 }
 
 impl Default for TTSConfig {
@@ -57,27 +46,17 @@ pub struct TTS {
     pub audio: String,
 }
 
-fn base64_decode(value: &str) -> String {
-    // Base64 may include newlines to be compatible with older versions that
-    // have a maximum line length.
-    let value = value.replace("\n", "");
-    let decoded = BASE64_STANDARD.decode(value.trim()).expect("no decode");
-    String::from_utf8(decoded).expect("no utf8")
-}
-
 impl TTS {
     /// Convert the base64 encoded audio to bytes.
-    /// 
-    /// These bytes can then be written to a file or used in other ways.
+    ///
+    /// These bytes can then, for example, be written to a file.
     pub fn as_bytes(&self) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
-        // if starts with data:audio/mp3;base64, then remove this
-        let audio = if self.audio.starts_with("data:audio/mp3;base64,") {
-            &self.audio[22..]
-        } else {
-            &self.audio
-        };
-        let bytes = base64_decode(audio);
-        Ok(bytes.as_bytes().to_vec())
+        let audio = self
+            .audio
+            .strip_prefix("data:audio/mp3;base64,")
+            .unwrap_or(&self.audio);
+        let bytes = BASE64_STANDARD.decode(audio).expect("no decode");
+        Ok(bytes)
     }
 }
 
