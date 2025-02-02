@@ -10,10 +10,11 @@ To see how to use this library, see the tests:
 
 ## Why was this Project Created?
 
-I was looking into making a tool that could summarize PDF files.
+I was looking into making a command line tool that could summarize PDF files.
 Then I noticed that I probably needed to use a cloud provider.
-But then I would need to support multiple providers in order to not lock myself in.
-That's when I realized we need a library that supports multiple providers.
+But then I would need to support multiple providers in order to give the user a choice.
+This library is the result of that.
+It provides the interface to multiple cloud providers, so that applications can be built on top.
 
 ## Cloud versus Local
 
