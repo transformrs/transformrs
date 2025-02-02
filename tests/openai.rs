@@ -38,6 +38,10 @@ async fn test_chat_completion_no_stream() {
 
 #[tokio::test]
 async fn test_chat_completion_stream() {
+    let providers = vec![
+        (Provider::DeepInfra, MODEL),
+        (Provider::OpenAI, "gpt-4o-mini"),
+    ];
     let messages = vec![
         Message {
             role: "system".to_string(),
@@ -49,16 +53,18 @@ async fn test_chat_completion_stream() {
         },
     ];
     let keys = aiapi::read_keys();
-    let key = keys.for_provider(&Provider::DeepInfra).unwrap();
-    let mut stream = openai::chat_completion_stream(&key, &MODEL, &messages)
-        .await
-        .unwrap();
-    let mut content = String::new();
-    while let Some(resp) = stream.next().await {
-        let resp = resp.unwrap();
-        assert_eq!(resp.choices.len(), 1);
-        let chunk = resp.choices[0].delta.content.clone().unwrap_or_default();
-        content += &chunk;
+    for (provider, model) in providers {
+        let key = keys.for_provider(&provider).unwrap();
+        let mut stream = openai::chat_completion_stream(&key, model, &messages)
+            .await
+            .unwrap();
+        let mut content = String::new();
+        while let Some(resp) = stream.next().await {
+            let resp = resp.unwrap();
+            assert_eq!(resp.choices.len(), 1);
+            let chunk = resp.choices[0].delta.content.clone().unwrap_or_default();
+            content += &chunk;
+        }
+        assert_eq!(content, "hello world");
     }
-    assert_eq!(content, "hello world");
 }

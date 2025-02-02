@@ -9,6 +9,7 @@ const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct-Turbo";
 
 #[tokio::test]
 async fn test_chat_completion_stream_duration() {
+    // Verify that the stream is passing messages through once they are available.
     let messages = vec![
         Message {
             role: "system".to_string(),
