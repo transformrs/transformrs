@@ -1,8 +1,6 @@
-# aiapi
+# transformrs
 
-AI API is an interface on top of AI API providers.
-
-Add support for multiple AI API providers inside your application.
+transformrs is an interface on top of AI API providers.
 
 To see how to use this library, see the tests:
 
