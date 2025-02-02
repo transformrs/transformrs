@@ -2,7 +2,6 @@ extern crate aiapi;
 
 use aiapi::openai;
 use aiapi::Message;
-use aiapi::Provider;
 use futures_util::stream::StreamExt;
 
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct-Turbo";

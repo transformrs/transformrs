@@ -4,6 +4,10 @@ AI API is an interface on top of AI API providers.
 
 Add support for multiple AI API providers inside your application.
 
+To see how to use this library, see the tests:
+
+- [openai.rs](tests/openai.rs) - Usage for endpoints that are OpenAI-compatible.
+
 ## Why was this Project Created?
 
 I was looking into making a tool that could summarize PDF files.
