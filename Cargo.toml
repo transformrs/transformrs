@@ -2,7 +2,7 @@
 name = "transformrs"
 version = "0.1.0"
 authors = ["Rik Huijzer <github@huijzer.xyz>"]
-description = "An interface on top of various AI APIs"
+description = "An interface for AI APIs"
 edition = "2021"
 repository = "https://github.com/rikhuijzer/transformrs"
 license = "MIT"
