@@ -1,8 +1,8 @@
-extern crate aiapi;
+extern crate transformers;
 
-use aiapi::openai;
-use aiapi::Message;
-use aiapi::Provider;
+use transformers::openai;
+use transformers::Message;
+use transformers::Provider;
 use futures_util::stream::StreamExt;
 
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct-Turbo";
@@ -23,7 +23,7 @@ async fn test_chat_completion_no_stream() {
             content: "This is a test. Please respond with 'hello world'.".to_string(),
         },
     ];
-    let keys = aiapi::read_keys();
+    let keys = transformers::read_keys();
     for (provider, model) in providers {
         let key = keys.for_provider(&provider).unwrap();
         let resp = openai::chat_completion(&key, model, &messages)
@@ -52,7 +52,7 @@ async fn test_chat_completion_stream() {
             content: "This is a test. Please respond with 'hello world'.".to_string(),
         },
     ];
-    let keys = aiapi::read_keys();
+    let keys = transformers::read_keys();
     for (provider, model) in providers {
         let key = keys.for_provider(&provider).unwrap();
         let mut stream = openai::chat_completion_stream(&key, model, &messages)

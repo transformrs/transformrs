@@ -1,8 +1,8 @@
-extern crate aiapi;
+extern crate transformers;
 
-use aiapi::openai;
-use aiapi::Message;
-use aiapi::Provider;
+use transformers::openai;
+use transformers::Message;
+use transformers::Provider;
 use futures_util::stream::StreamExt;
 
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct-Turbo";
@@ -20,7 +20,7 @@ async fn test_chat_completion_stream_duration() {
             content: "Tell a joke about a car.".to_string(),
         },
     ];
-    let keys = aiapi::read_keys();
+    let keys = transformers::read_keys();
     let key = keys.for_provider(&Provider::DeepInfra).unwrap();
     let mut stream = openai::chat_completion_stream(&key, &MODEL, &messages)
         .await
