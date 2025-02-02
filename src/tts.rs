@@ -3,7 +3,6 @@
 //! Functionality related to text-to-speech.
 
 use crate::request_headers;
-use crate::Api;
 use crate::Key;
 use crate::Provider;
 use base64::prelude::*;
@@ -31,11 +30,11 @@ impl Default for TTSConfig {
     }
 }
 
-fn address(key: &Key, api: &Api, model: &str) -> String {
+fn address(key: &Key, model: &str) -> String {
     if key.provider == Provider::DeepInfra {
-        format!("{}inference/{}", key.provider.url(api), model)
+        format!("{}/v1/inference/{}", key.provider.domain(), model)
     } else {
-        format!("{}chat/completions", key.provider.url(api))
+        format!("{}/v1/chat/completions", key.provider.domain())
     }
 }
 
@@ -62,11 +61,10 @@ impl TTS {
 
 pub async fn tts(
     key: &Key,
-    api: &Api,
     config: TTSConfig,
     text: &str,
 ) -> Result<TTS, Box<dyn Error + Send + Sync>> {
-    let address = address(key, api, &config.model);
+    let address = address(key, &config.model);
     let mut body = serde_json::json!({
         "text": text,
         "model": config.model,

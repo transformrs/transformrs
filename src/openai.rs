@@ -1,7 +1,7 @@
 use crate::request_headers;
-use crate::Api;
 use crate::Key;
 use crate::Message;
+use crate::Provider;
 use futures::Stream;
 use futures::StreamExt;
 use futures::TryStreamExt;
@@ -12,7 +12,13 @@ use serde::Serialize;
 use std::error::Error;
 use std::pin::Pin;
 
-const API: Api = Api::OpenAI;
+fn address(key: &Key) -> String {
+    if key.provider == Provider::OpenAI {
+        format!("{}/v1/chat/completions", key.provider.domain())
+    } else {
+        format!("{}/v1/openai/chat/completions", key.provider.domain())
+    }
+}
 
 async fn request_chat_completion(
     key: &Key,
@@ -20,8 +26,7 @@ async fn request_chat_completion(
     stream: bool,
     messages: &[Message],
 ) -> Result<Response, Box<dyn Error + Send + Sync>> {
-    // Using the OpenAI-compatible API.
-    let address = format!("{}chat/completions", key.provider.url(&API));
+    let address = address(key);
     let body = serde_json::json!({
         "model": model,
         "messages": messages,

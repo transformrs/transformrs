@@ -50,22 +50,19 @@ impl std::fmt::Display for Provider {
 }
 
 impl Provider {
-    pub fn url(&self, api: &Api) -> String {
+    pub fn domain(&self) -> String {
         match self {
-            Provider::OpenAI => "https://api.openai.com/v1/",
-            Provider::DeepInfra => match api {
-                Api::OpenAI => "https://api.deepinfra.com/v1/openai/",
-                Api::DeepInfra => "https://api.deepinfra.com/v1/",
-            },
-            Provider::Groq => "https://api.groq.com/openai/v1/",
-            Provider::Azure => "https://api.azure.com/v1/",
-            Provider::Amazon => "https://api.amazon.com/v1/",
-            Provider::TogetherAI => "https://api.together.ai/v1/",
-            Provider::Fireworks => "https://api.fireworks.ai/v1/",
-            Provider::FriendliAI => "https://api.friendli.ai/v1/",
-            Provider::Hyperbolic => "https://api.hyperbolic.xyz/v1/",
-            Provider::Nebius => "https://api.nebi.us/v1/",
-            Provider::Novita => "https://api.novita.ai/v1/",
+            Provider::OpenAI => "https://api.openai.com",
+            Provider::DeepInfra => "https://api.deepinfra.com",
+            Provider::Groq => "https://api.groq.com",
+            Provider::Azure => "https://api.azure.com",
+            Provider::Amazon => "https://api.amazon.com",
+            Provider::TogetherAI => "https://api.together.ai",
+            Provider::Fireworks => "https://api.fireworks.ai",
+            Provider::FriendliAI => "https://api.friendli.ai",
+            Provider::Hyperbolic => "https://api.hyperbolic.xyz",
+            Provider::Nebius => "https://api.nebi.us",
+            Provider::Novita => "https://api.novita.ai",
         }
         .to_string()
     }
