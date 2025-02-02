@@ -4,7 +4,6 @@ use aiapi::openai;
 use aiapi::Message;
 use aiapi::Provider;
 use futures_util::stream::StreamExt;
-use serde_json::Value;
 
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct-Turbo";
 
@@ -49,10 +48,10 @@ async fn test_chat_completion_stream() {
         .await
         .unwrap();
     let mut content = String::new();
-    while let Some(json) = stream.next().await {
-        let chunk = openai::chat_completion_stream_content(json.unwrap())
-            .await
-            .unwrap();
+    while let Some(resp) = stream.next().await {
+        let resp = resp.unwrap();
+        assert_eq!(resp.choices.len(), 1);
+        let chunk = resp.choices[0].delta.content.clone().unwrap_or_default();
         content += &chunk;
     }
     assert_eq!(content, "hello world");

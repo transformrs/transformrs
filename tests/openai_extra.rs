@@ -26,11 +26,13 @@ async fn test_chat_completion_stream_duration() {
         .unwrap();
     let mut content = String::new();
     let mut timestamps = Vec::new();
-    while let Some(json) = stream.next().await {
+    while let Some(resp) = stream.next().await {
         let timestamp = std::time::SystemTime::now();
-        let chunk = openai::chat_completion_stream_content(json.unwrap())
-            .await
-            .unwrap();
+        let chunk = resp.unwrap().choices[0]
+            .delta
+            .content
+            .clone()
+            .unwrap_or_default();
         content += &chunk;
         println!("{}", chunk);
         timestamps.push(timestamp);
