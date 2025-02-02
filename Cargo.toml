@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+futures = "0.3.31"
+futures-util = "0.3.31"
 hyper = { version = "1.6.0", features = ["client", "http2"] }
 hyper-util = { version = "0.1.10", features = ["tokio"] }
 reqwest = { version = "0.12", features = ["json", "stream"] }
