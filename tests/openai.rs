@@ -90,7 +90,8 @@ async fn test_chat_completion_stream_duration() {
     // The car joke is probably one or two sentences, which should take at least some ms.
     let expected_duration = std::time::Duration::from_millis(100);
     let total_duration = last_timestamp.duration_since(*first_timestamp).unwrap();
-    assert!(total_duration >= expected_duration,
+    assert!(
+        total_duration >= expected_duration,
         "Streaming response took {} ms, expected at least {} ms",
         total_duration.as_millis(),
         expected_duration.as_millis()
