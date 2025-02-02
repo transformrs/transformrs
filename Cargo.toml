@@ -9,6 +9,7 @@ license = "MIT"
 rust-version = "1.81"
 
 [dependencies]
+base64 = "0.22.1"
 futures = "0.3.31"
 futures-util = "0.3.31"
 hyper = { version = "1.6.0", features = ["client", "http2"] }

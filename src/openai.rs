@@ -1,3 +1,4 @@
+use crate::request_headers;
 use crate::Api;
 use crate::Key;
 use crate::Message;
@@ -5,8 +6,6 @@ use futures::Stream;
 use futures::StreamExt;
 use futures::TryStreamExt;
 use reqwest;
-use reqwest::header::HeaderMap;
-use reqwest::header::HeaderValue;
 use reqwest::Response;
 use serde::Deserialize;
 use serde::Serialize;
@@ -14,16 +13,6 @@ use std::error::Error;
 use std::pin::Pin;
 
 const API: Api = Api::OpenAI;
-
-fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn Error + Send + Sync>> {
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        "Authorization",
-        HeaderValue::from_str(&format!("Bearer {}", key.key))?,
-    );
-    headers.insert("Content-Type", HeaderValue::from_str("application/json")?);
-    Ok(headers)
-}
 
 async fn request_chat_completion(
     key: &Key,
