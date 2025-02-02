@@ -52,7 +52,15 @@ async fn request_chat_completion(
 pub struct Choice {
     pub index: u64,
     pub message: Message,
+    pub logprobs: Option<String>,
     pub finish_reason: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Usage {
+    pub prompt_tokens: u64,
+    pub completion_tokens: u64,
+    pub total_tokens: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -64,6 +72,7 @@ pub struct ChatCompletion {
     pub system_fingerprint: Option<String>,
     pub choices: Vec<Choice>,
     pub service_tier: Option<String>,
+    pub usage: Usage,
 }
 
 pub async fn chat_completion(
@@ -117,22 +126,6 @@ pub async fn chat_completion_stream(
         });
 
     Ok(Box::pin(stream))
-}
-
-/// Get the content of a non-streaming chat completion.
-pub async fn chat_completion_content(
-    json: Value,
-) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-    let content = json
-        .get("choices")
-        .expect("expected choices")
-        .get(0)
-        .unwrap()
-        .get("message")
-        .unwrap()
-        .get("content")
-        .unwrap();
-    Ok(content.as_str().unwrap().to_string())
 }
 
 pub async fn chat_completion_stream_content(
