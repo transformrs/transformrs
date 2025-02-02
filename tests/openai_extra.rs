@@ -22,7 +22,7 @@ async fn test_chat_completion_stream_duration() {
     ];
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&Provider::DeepInfra).unwrap();
-    let mut stream = openai::chat_completion_stream(&key, &MODEL, &messages)
+    let mut stream = openai::stream_chat_completion(&key, &MODEL, &messages)
         .await
         .unwrap();
     let mut content = String::new();

@@ -111,7 +111,7 @@ pub struct ChatCompletionChunk {
 
 /// Convert a streaming response into an iterator of JSON messages.
 /// Each message represents a complete chunk from the stream.
-pub async fn chat_completion_stream(
+pub async fn stream_chat_completion(
     key: &Key,
     model: &str,
     messages: &[Message],

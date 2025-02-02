@@ -55,7 +55,7 @@ async fn test_chat_completion_stream() {
     let keys = transformrs::load_keys(".env");
     for (provider, model) in providers {
         let key = keys.for_provider(&provider).unwrap();
-        let mut stream = openai::chat_completion_stream(&key, model, &messages)
+        let mut stream = openai::stream_chat_completion(&key, model, &messages)
             .await
             .unwrap();
         let mut content = String::new();
