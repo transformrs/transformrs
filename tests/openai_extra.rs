@@ -20,7 +20,7 @@ async fn test_chat_completion_stream_duration() {
             content: "Tell a joke about a car.".to_string(),
         },
     ];
-    let keys = transformrs::read_keys();
+    let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&Provider::DeepInfra).unwrap();
     let mut stream = openai::chat_completion_stream(&key, &MODEL, &messages)
         .await

@@ -2,6 +2,7 @@ pub mod openai;
 
 use serde::Deserialize;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 
@@ -84,38 +85,45 @@ impl Keys {
     }
 }
 
-fn read_key(content: &str, name: &str) -> String {
-    content
-        .lines()
-        .find(|line| line.starts_with(name))
-        .and_then(|line| line.split('=').nth(1))
-        .map(|key| key.trim().to_string())
-        .unwrap_or_else(|| {
-            println!("Error: DEEPINFRA_KEY not found in .env file");
-            String::new()
-        })
-}
-
-pub fn read_keys() -> Keys {
+fn load_env_file(path: &str) -> HashMap<String, String> {
     let mut env_content = String::new();
-    if let Ok(mut file) = File::open(".env") {
+    if let Ok(mut file) = File::open(path) {
         file.read_to_string(&mut env_content)
             .expect("Failed to read .env file");
-    } else {
-        panic!("Error: .env file not found");
     }
+    env_content
+        .lines()
+        .filter_map(|line| {
+            let mut parts = line.split('=');
+            if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
+                Some((key.trim().to_string(), value.trim().to_string()))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+/// Load the keys from either the .env file or environment variables.
+pub fn load_keys(path: &str) -> Keys {
+    let env_map = load_env_file(path);
 
     let mut keys = vec![];
-    for line in env_content.lines() {
-        if line.starts_with(&Provider::OpenAI.key_name()) {
+
+    // Loop through each provider
+    for provider in [Provider::OpenAI, Provider::DeepInfra] {
+        // First check environment variables
+        if let Ok(key_value) = std::env::var(provider.key_name()) {
             keys.push(Key {
-                provider: Provider::OpenAI,
-                key: read_key(line, &Provider::OpenAI.key_name()),
+                provider: provider.clone(),
+                key: key_value,
             });
-        } else if line.starts_with(&Provider::DeepInfra.key_name()) {
+        }
+        // Then check .env file
+        else if let Some(key_value) = env_map.get(&provider.key_name()) {
             keys.push(Key {
-                provider: Provider::DeepInfra,
-                key: read_key(line, &Provider::DeepInfra.key_name()),
+                provider: provider.clone(),
+                key: key_value.to_string(),
             });
         }
     }

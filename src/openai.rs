@@ -131,9 +131,11 @@ pub async fn chat_completion_stream(
                 .lines()
                 .filter(|line| !line.is_empty())
                 .filter_map(|line| {
-                    if let Some(stripped) = line.strip_prefix("data: ") {
-                        let json_str = stripped;
+                    if let Some(json_str) = line.strip_prefix("data: ") {
                         if json_str == "[DONE]" {
+                            return None;
+                        }
+                        if json_str.is_empty() {
                             return None;
                         }
                         Some(

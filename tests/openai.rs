@@ -23,7 +23,7 @@ async fn test_chat_completion_no_stream() {
             content: "This is a test. Please respond with 'hello world'.".to_string(),
         },
     ];
-    let keys = transformrs::read_keys();
+    let keys = transformrs::load_keys(".env");
     for (provider, model) in providers {
         let key = keys.for_provider(&provider).unwrap();
         let resp = openai::chat_completion(&key, model, &messages)
@@ -52,7 +52,7 @@ async fn test_chat_completion_stream() {
             content: "This is a test. Please respond with 'hello world'.".to_string(),
         },
     ];
-    let keys = transformrs::read_keys();
+    let keys = transformrs::load_keys(".env");
     for (provider, model) in providers {
         let key = keys.for_provider(&provider).unwrap();
         let mut stream = openai::chat_completion_stream(&key, model, &messages)

@@ -17,8 +17,8 @@ let messages = vec![
         content: "This is a test. Please respond with 'hello world'.".to_string(),
     },
 ];
-let keys = transformrs::read_keys();
-let key = keys.for_provider(&provider).unwrap();
+let keys = transformrs::load_keys(".env");
+let key = keys.for_provider(&Provider::DeepInfra).unwrap();
 let model = "meta-llama/Llama-3.3-70B-Instruct";
 let resp = openai::chat_completion(&key, model, &messages)
     .await
