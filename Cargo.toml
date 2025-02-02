@@ -1,7 +1,13 @@
 [package]
 name = "transformrs"
 version = "0.1.0"
+authors = ["Rik Huijzer <github@huijzer.xyz>"]
+description = "An interface on top of various AI APIs"
 edition = "2021"
+repository = "https://github.com/rikhuijzer/transformrs"
+categories = ["ai"]
+license = "MIT"
+rust-version = "1.81"
 
 [dependencies]
 futures = "0.3.31"
