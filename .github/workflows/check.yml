@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  # Minimal version of Rust that aiapi supports.
+  # Minimal version of Rust that transformrs supports.
   RUST_TOOLCHAIN: '1.81'
 
 jobs:
