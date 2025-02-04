@@ -8,10 +8,13 @@ use transformrs::Provider;
 async fn test_tts() {
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&Provider::DeepInfra).unwrap();
-    let mut config = transformrs::tts::TTSConfig::default();
+    let mut config = transformrs::text_to_speech::TTSConfig::default();
     config.preset_voice = Some("am_echo".to_string());
     let msg = "Hello, world! This is a test of the TTS API.";
-    let resp = transformrs::tts::tts(&key, config, msg).await.unwrap();
+    let model = "hexgrad/Kokoro-82M".to_string();
+    let resp = transformrs::text_to_speech::tts(&key, config, &model, msg)
+        .await
+        .unwrap();
     assert_eq!(resp.output_format, "mp3");
     let bytes = resp.as_bytes().unwrap();
     assert!(bytes.len() > 0);
