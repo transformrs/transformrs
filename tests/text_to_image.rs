@@ -14,7 +14,9 @@ async fn test_text_to_image() {
     let resp = transformrs::text_to_image::text_to_image(&key, config, prompt)
         .await
         .unwrap();
-    println!("resp: {:?}", resp);
 
-    assert!(false);
+    let image = &resp.images[0];
+    let bytes = image.base64_decode().unwrap();
+    let mut file = File::create("tests/tmp.jpg").unwrap();
+    file.write_all(&bytes).unwrap();
 }

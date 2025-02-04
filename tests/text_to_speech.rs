@@ -16,7 +16,7 @@ async fn test_tts() {
         .await
         .unwrap();
     assert_eq!(resp.output_format, "mp3");
-    let bytes = resp.as_bytes().unwrap();
+    let bytes = resp.base64_decode().unwrap();
     assert!(bytes.len() > 0);
 
     // Can be used to manually verify the output.

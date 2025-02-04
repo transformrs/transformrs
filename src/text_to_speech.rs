@@ -47,7 +47,7 @@ impl TTS {
     /// Convert the base64 encoded audio to bytes.
     ///
     /// These bytes can then, for example, be written to a file.
-    pub fn as_bytes(&self) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
+    pub fn base64_decode(&self) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
         let audio = self
             .audio
             .strip_prefix("data:audio/mp3;base64,")
