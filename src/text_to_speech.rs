@@ -37,13 +37,13 @@ fn address(key: &Key, model: &str) -> String {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct TTS {
+pub struct Speech {
     pub request_id: String,
     pub output_format: String,
     pub audio: String,
 }
 
-impl TTS {
+impl Speech {
     /// Convert the base64 encoded audio to bytes.
     ///
     /// These bytes can then, for example, be written to a file.
@@ -62,7 +62,7 @@ pub async fn tts(
     config: TTSConfig,
     model: &str,
     text: &str,
-) -> Result<TTS, Box<dyn Error + Send + Sync>> {
+) -> Result<Speech, Box<dyn Error + Send + Sync>> {
     let address = address(key, model);
     let mut body = serde_json::json!({
         "text": text,
@@ -84,6 +84,6 @@ pub async fn tts(
         .json(&body)
         .send()
         .await?;
-    let json = resp.json::<TTS>().await?;
+    let json = resp.json::<Speech>().await?;
     Ok(json)
 }
