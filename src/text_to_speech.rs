@@ -13,7 +13,6 @@ use std::error::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TTSConfig {
-    pub model: String,
     pub output_format: Option<String>,
     pub preset_voice: Option<String>,
     pub speed: Option<f32>,
@@ -22,7 +21,6 @@ pub struct TTSConfig {
 impl Default for TTSConfig {
     fn default() -> Self {
         Self {
-            model: "hexgrad/Kokoro-82M".to_string(),
             output_format: Some("mp3".to_string()),
             preset_voice: None,
             speed: None,
@@ -39,17 +37,17 @@ fn address(key: &Key, model: &str) -> String {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct TTS {
+pub struct Speech {
     pub request_id: String,
     pub output_format: String,
     pub audio: String,
 }
 
-impl TTS {
+impl Speech {
     /// Convert the base64 encoded audio to bytes.
     ///
     /// These bytes can then, for example, be written to a file.
-    pub fn as_bytes(&self) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
+    pub fn base64_decode(&self) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
         let audio = self
             .audio
             .strip_prefix("data:audio/mp3;base64,")
@@ -62,12 +60,13 @@ impl TTS {
 pub async fn tts(
     key: &Key,
     config: TTSConfig,
+    model: &str,
     text: &str,
-) -> Result<TTS, Box<dyn Error + Send + Sync>> {
-    let address = address(key, &config.model);
+) -> Result<Speech, Box<dyn Error + Send + Sync>> {
+    let address = address(key, model);
     let mut body = serde_json::json!({
         "text": text,
-        "model": config.model,
+        "model": model,
     });
     if let Some(output_format) = config.output_format {
         body["output_format"] = serde_json::Value::String(output_format);
@@ -85,6 +84,6 @@ pub async fn tts(
         .json(&body)
         .send()
         .await?;
-    let json = resp.json::<TTS>().await?;
+    let json = resp.json::<Speech>().await?;
     Ok(json)
 }

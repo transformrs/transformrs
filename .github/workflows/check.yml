@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  # Minimal version of Rust that aiapi supports.
+  # Minimal version of Rust that transformrs supports.
   RUST_TOOLCHAIN: '1.81'
 
 jobs:
@@ -21,16 +21,16 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - run: |
-          echo "DEEPINFRA_KEY=${{ secrets.DEEPINFRA_KEY }}" > .env
-          echo "OPENAI_KEY=${{ secrets.OPENAI_KEY }}" >> .env
-
       - run: rustup toolchain install ${{ env.RUST_TOOLCHAIN }}
 
       # Compile, but don't run.
       - run: cargo test --no-run
 
       - run: cargo test --all-features
+        env:
+          DEEPINFRA_KEY: ${{ secrets.DEEPINFRA_KEY }}
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          HYPERBOLIC_KEY: ${{ secrets.HYPERBOLIC_KEY }}
 
       - run: RUSTDOCFLAGS="-D warnings" cargo doc
 

@@ -1,5 +1,6 @@
 pub mod openai;
-pub mod tts;
+pub mod text_to_image;
+pub mod text_to_speech;
 
 use reqwest::header::HeaderMap;
 use reqwest::header::HeaderValue;
@@ -108,7 +109,7 @@ fn load_env_file(path: &str) -> HashMap<String, String> {
         .filter_map(|line| {
             let mut parts = line.split('=');
             if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
-                Some((key.trim().to_string(), value.trim().to_string()))
+                Some((key.to_string(), value.to_string()))
             } else {
                 None
             }
@@ -122,17 +123,19 @@ pub fn load_keys(path: &str) -> Keys {
 
     let mut keys = vec![];
 
-    // Loop through each provider
-    for provider in [Provider::OpenAI, Provider::DeepInfra] {
-        // First check environment variables
+    let providers = [
+        Provider::OpenAI,
+        Provider::DeepInfra,
+        Provider::Hyperbolic,
+        Provider::Azure,
+    ];
+    for provider in providers {
         if let Ok(key_value) = std::env::var(provider.key_name()) {
             keys.push(Key {
                 provider: provider.clone(),
                 key: key_value,
             });
-        }
-        // Then check .env file
-        else if let Some(key_value) = env_map.get(&provider.key_name()) {
+        } else if let Some(key_value) = env_map.get(&provider.key_name()) {
             keys.push(Key {
                 provider: provider.clone(),
                 key: key_value.to_string(),

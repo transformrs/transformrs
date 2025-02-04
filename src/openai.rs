@@ -132,6 +132,7 @@ pub async fn stream_chat_completion(
                         if json_str.is_empty() {
                             return None;
                         }
+                        println!("json_str: {}", json_str);
                         Some(
                             serde_json::from_str::<ChatCompletionChunk>(json_str)
                                 .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>),
