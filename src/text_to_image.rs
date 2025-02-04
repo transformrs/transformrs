@@ -4,12 +4,10 @@
 
 use crate::request_headers;
 use crate::Key;
-use crate::Provider;
 use base64::prelude::*;
 use reqwest;
 use serde::Deserialize;
 use serde::Serialize;
-use serde_json::Value;
 use std::error::Error;
 
 /// Configuration for text-to-image.
