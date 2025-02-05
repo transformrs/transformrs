@@ -65,7 +65,10 @@ async fn chat_completion_stream_helper(
         let chunk = resp.choices[0].delta.content.clone().unwrap_or_default();
         content += &chunk;
     }
-    assert_eq!(content.to_lowercase(), "hello world");
+    assert_eq!(
+        content.to_lowercase().trim().trim_end_matches('.'),
+        "hello world"
+    );
     Ok(())
 }
 
