@@ -10,6 +10,14 @@ use transformrs::Provider;
 
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct-Turbo";
 
+fn canonicalize_content(content: &str) -> String {
+    content
+        .to_lowercase()
+        .trim()
+        .trim_end_matches('.')
+        .to_string()
+}
+
 async fn chat_completion_no_stream_helper(
     key: &Key,
     model: &str,
@@ -22,10 +30,7 @@ async fn chat_completion_no_stream_helper(
     assert_eq!(resp.object, "chat.completion");
     assert_eq!(resp.choices.len(), 1);
     let content = resp.choices[0].message.content.clone();
-    assert_eq!(
-        content.to_lowercase().trim().trim_end_matches('.'),
-        "hello world"
-    );
+    assert_eq!(canonicalize_content(&content), "hello world");
     Ok(())
 }
 
@@ -69,10 +74,7 @@ async fn chat_completion_stream_helper(
         let chunk = resp.choices[0].delta.content.clone().unwrap_or_default();
         content += &chunk;
     }
-    assert_eq!(
-        content.to_lowercase().trim().trim_end_matches('.'),
-        "hello world"
-    );
+    assert_eq!(canonicalize_content(&content), "hello world");
     Ok(())
 }
 
