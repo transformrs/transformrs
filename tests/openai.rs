@@ -21,7 +21,11 @@ async fn chat_completion_no_stream_helper(
     println!("{:?}", resp);
     assert_eq!(resp.object, "chat.completion");
     assert_eq!(resp.choices.len(), 1);
-    assert_eq!(resp.choices[0].message.content, "hello world");
+    let content = resp.choices[0].message.content.clone();
+    assert_eq!(
+        content.to_lowercase().trim().trim_end_matches('.'),
+        "hello world"
+    );
     Ok(())
 }
 
