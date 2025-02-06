@@ -2,33 +2,7 @@
 
 transformrs is an interface for AI API providers.
 
-```rust
-use transformrs::openai;
-use transformrs::Message;
-use transformrs::Provider;
-
-let messages = vec![
-    Message {
-        role: "system".to_string(),
-        content: "You are a helpful assistant.".to_string(),
-    },
-    Message {
-        role: "user".to_string(),
-        content: "This is a test. Please respond with 'hello world'.".to_string(),
-    },
-];
-let keys = transformrs::load_keys(".env");
-let key = keys.for_provider(&Provider::DeepInfra).unwrap();
-let model = "meta-llama/Llama-3.3-70B-Instruct";
-let resp = openai::chat_completion(&key, model, &messages)
-    .await
-    .unwrap();
-assert_eq!(resp.choices[0].message.content, "hello world");
-```
-
-More detailed examples can be found in the tests:
-
-- [openai.rs](tests/openai.rs) - Usage for endpoints that are OpenAI-compatible (supports OpenAI, DeepInfra, etc.).
+For examples, see <https://transformrs.org>.
 
 ## Why was this Project Created?
 
