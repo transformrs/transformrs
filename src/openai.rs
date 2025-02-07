@@ -99,7 +99,7 @@ fn extract_error(body: &Value) -> String {
             .unwrap_or(body.to_string().as_str())
             .to_string();
     }
-    format!("Unknown error: {}", body.to_string())
+    format!("Unknown error: {body}")
 }
 
 pub async fn chat_completion(
@@ -117,7 +117,7 @@ pub async fn chat_completion(
     let json = match serde_json::from_str::<ChatCompletion>(&text) {
         Ok(json) => json,
         Err(_e) => match serde_json::from_str::<Value>(&text) {
-            Ok(error) => return Err(format!("{}", extract_error(&error)).into()),
+            Ok(error) => return Err(extract_error(&error).into()),
             Err(e) => {
                 return Err(format!("Error parsing response: {} in text: '{}'", e, text).into())
             }
