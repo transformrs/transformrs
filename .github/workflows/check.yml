@@ -29,8 +29,9 @@ jobs:
       - run: cargo test --all-features
         env:
           DEEPINFRA_KEY: ${{ secrets.DEEPINFRA_KEY }}
-          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          GOOGLE_KEY: ${{ secrets.GOOGLE_KEY }}
           HYPERBOLIC_KEY: ${{ secrets.HYPERBOLIC_KEY }}
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
 
       - run: RUSTDOCFLAGS="-D warnings" cargo doc
 

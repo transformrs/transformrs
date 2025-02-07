@@ -3,13 +3,13 @@ use crate::Key;
 use crate::Message;
 use crate::Provider;
 use futures::Stream;
-use serde_json::Value;
 use futures::StreamExt;
 use futures::TryStreamExt;
 use reqwest;
 use reqwest::Response;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_json::Value;
 use std::error::Error;
 use std::pin::Pin;
 
@@ -34,10 +34,14 @@ async fn request_chat_completion(
         "messages": messages,
         "stream": stream,
     });
-    println!("{}", address);
-    println!("{}", body.to_string());
-    println!("{:?}", request_headers(key)?);
-    let client = reqwest::Client::new();
+    let client = if key.provider == Provider::Google {
+        // Without this, the request will fail with 400 INVALID_ARGUMENT.
+        // According to the docs, a 400 error is returned when the request body
+        // is malformed.  Why rustls tls fixes this, I do not know.
+        reqwest::Client::builder().use_rustls_tls().build()?
+    } else {
+        reqwest::Client::new()
+    };
     let resp = client
         .post(address)
         .headers(request_headers(key)?)
@@ -83,11 +87,17 @@ pub struct ChatCompletionError {
 fn extract_error(body: &Value) -> String {
     if let Some(error) = body.get("error") {
         if let Some(message) = error.get("message") {
-            return message.as_str().unwrap_or(body.to_string().as_str()).to_string();
+            return message
+                .as_str()
+                .unwrap_or(body.to_string().as_str())
+                .to_string();
         }
     }
     if let Some(message) = body.get("message") {
-        return message.as_str().unwrap_or(body.to_string().as_str()).to_string();
+        return message
+            .as_str()
+            .unwrap_or(body.to_string().as_str())
+            .to_string();
     }
     format!("Unknown error: {}", body.to_string())
 }
@@ -108,7 +118,9 @@ pub async fn chat_completion(
         Ok(json) => json,
         Err(_e) => match serde_json::from_str::<Value>(&text) {
             Ok(error) => return Err(format!("{}", extract_error(&error)).into()),
-            Err(e) => return Err(format!("Error parsing response: {} in text: '{}'", e, text).into()),
+            Err(e) => {
+                return Err(format!("Error parsing response: {} in text: '{}'", e, text).into())
+            }
         },
     };
     Ok(json)
