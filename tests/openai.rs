@@ -73,6 +73,15 @@ async fn test_chat_completion_no_stream_hyperbolic() {
 }
 
 #[tokio::test]
+async fn test_chat_completion_no_stream_hyperbolic_error() {
+    let out = test_chat_completion_no_stream(Provider::Hyperbolic, "foo").await;
+    assert!(out.is_err());
+    let err = out.unwrap_err();
+    println!("{}", err);
+    assert!(err.to_string().contains("allowed now, your model foo"));
+}
+
+#[tokio::test]
 async fn test_chat_completion_no_stream_google() {
     test_chat_completion_no_stream(Provider::Google, "gemini-1.5-flash")
         .await
