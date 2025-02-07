@@ -149,6 +149,35 @@ pub struct ChatCompletionChunk {
     pub choices: Vec<ChunkChoice>,
 }
 
+fn process_line(line: &str, buffer: &mut String) -> Option<ChatCompletionChunk> {
+    fn parse_str(line: &str) -> Option<ChatCompletionChunk> {
+        match serde_json::from_str::<ChatCompletionChunk>(line) {
+            Ok(json) => Some(json),
+            Err(_e) => None,
+        }
+    }
+
+    if let Some(json_str) = line.strip_prefix("data: ") {
+        if json_str == "[DONE]" {
+            return None;
+        }
+        if json_str.is_empty() {
+            return None;
+        }
+        // To debug intermittent EOF while parsing string.
+        println!("{}", json_str);
+        match parse_str(json_str) {
+            Some(json) => Some(json),
+            None => {
+                buffer.push_str(json_str);
+                None
+            }
+        }
+    } else {
+        None
+    }
+}
+
 /// Convert a streaming response into an iterator of JSON messages.
 /// Each message represents a complete chunk from the stream.
 pub async fn stream_chat_completion(
@@ -160,6 +189,7 @@ pub async fn stream_chat_completion(
     Box<dyn Error + Send + Sync>,
 > {
     let resp = request_chat_completion(key, model, true, messages).await?;
+    let mut buffer = String::new();
     let stream = resp
         .bytes_stream()
         .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>)
@@ -170,24 +200,7 @@ pub async fn stream_chat_completion(
             let results: Vec<_> = text
                 .lines()
                 .filter(|line| !line.is_empty())
-                .filter_map(|line| {
-                    if let Some(json_str) = line.strip_prefix("data: ") {
-                        if json_str == "[DONE]" {
-                            return None;
-                        }
-                        if json_str.is_empty() {
-                            return None;
-                        }
-                        // To debug intermittent EOF while parsing string.
-                        println!("{}", json_str);
-                        Some(
-                            serde_json::from_str::<ChatCompletionChunk>(json_str)
-                                .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>),
-                        )
-                    } else {
-                        None
-                    }
-                })
+                .filter_map(|line| process_line(line, &mut buffer))
                 .collect();
 
             futures::stream::iter(results)
