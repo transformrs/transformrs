@@ -8,7 +8,7 @@ use transformrs::Key;
 use transformrs::Message;
 use transformrs::Provider;
 
-const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct-Turbo";
+const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct";
 
 fn canonicalize_content(content: &str) -> String {
     content
@@ -18,28 +18,10 @@ fn canonicalize_content(content: &str) -> String {
         .to_string()
 }
 
-async fn chat_completion_no_stream_helper(
-    key: &Key,
+async fn test_chat_completion_no_stream(
+    provider: Provider,
     model: &str,
-    messages: &[Message],
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let resp = openai::chat_completion(&key, model, messages)
-        .await
-        .unwrap();
-    println!("{:?}", resp);
-    assert_eq!(resp.object, "chat.completion");
-    assert_eq!(resp.choices.len(), 1);
-    let content = resp.choices[0].message.content.clone();
-    assert_eq!(canonicalize_content(&content), "hello world");
-    Ok(())
-}
-
-#[tokio::test]
-async fn test_chat_completion_no_stream() {
-    let providers = vec![
-        (Provider::DeepInfra, MODEL),
-        (Provider::OpenAI, "gpt-4o-mini"),
-    ];
     let messages = vec![
         Message {
             role: "system".to_string(),
@@ -51,12 +33,38 @@ async fn test_chat_completion_no_stream() {
         },
     ];
     let keys = transformrs::load_keys(".env");
-    let futures = providers.iter().map(|(provider, model)| {
-        let key = keys.for_provider(&provider).unwrap();
-        let messages = messages.clone();
-        async move { chat_completion_no_stream_helper(&key, &model, &messages).await }
-    });
-    futures::future::try_join_all(futures).await.unwrap();
+    let key = keys.for_provider(&provider).unwrap();
+    let messages = messages.clone();
+    let resp = openai::chat_completion(&key, model, &messages)
+        .await
+        .unwrap();
+    println!("{:?}", resp);
+    assert_eq!(resp.object, "chat.completion");
+    assert_eq!(resp.choices.len(), 1);
+    let content = resp.choices[0].message.content.clone();
+    assert_eq!(canonicalize_content(&content), "hello world");
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_chat_completion_no_stream_deepinfra() {
+    test_chat_completion_no_stream(Provider::DeepInfra, MODEL)
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn test_chat_completion_no_stream_openai() {
+    test_chat_completion_no_stream(Provider::OpenAI, "gpt-4o-mini")
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn test_chat_completion_no_stream_hyperbolic() {
+    test_chat_completion_no_stream(Provider::Hyperbolic, MODEL)
+        .await
+        .unwrap();
 }
 
 async fn chat_completion_stream_helper(

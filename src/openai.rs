@@ -13,10 +13,10 @@ use std::error::Error;
 use std::pin::Pin;
 
 fn address(key: &Key) -> String {
-    if key.provider == Provider::OpenAI {
-        format!("{}/v1/chat/completions", key.provider.domain())
-    } else {
-        format!("{}/v1/openai/chat/completions", key.provider.domain())
+    match key.provider {
+        Provider::OpenAI => format!("{}/v1/chat/completions", key.provider.domain()),
+        Provider::Hyperbolic => format!("{}/v1/chat/completions", key.provider.domain()),
+        _ => format!("{}/v1/openai/chat/completions", key.provider.domain()),
     }
 }
 
@@ -59,7 +59,7 @@ pub struct Usage {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChatCompletion {
-    pub id: String,
+    pub id: Option<String>,
     pub object: String,
     pub created: u64,
     pub model: String,
@@ -69,6 +69,12 @@ pub struct ChatCompletion {
     pub usage: Usage,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ChatCompletionError {
+    pub object: String,
+    pub message: String,
+}
+
 pub async fn chat_completion(
     key: &Key,
     model: &str,
@@ -76,7 +82,14 @@ pub async fn chat_completion(
 ) -> Result<ChatCompletion, Box<dyn Error + Send + Sync>> {
     let stream = false;
     let resp = request_chat_completion(key, model, stream, messages).await?;
-    let json = resp.json::<ChatCompletion>().await?;
+    let text = resp.text().await?;
+    let json = match serde_json::from_str::<ChatCompletion>(&text) {
+        Ok(json) => json,
+        Err(_e) => match serde_json::from_str::<ChatCompletionError>(&text) {
+            Ok(error) => return Err(format!("{}: {}", error.message, error.object).into()),
+            Err(e) => return Err(format!("Error parsing response: {} in text: {}", e, text).into()),
+        },
+    };
     Ok(json)
 }
 
