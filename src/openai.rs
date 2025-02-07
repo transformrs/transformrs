@@ -17,6 +17,7 @@ fn address(key: &Key) -> String {
     match key.provider {
         Provider::OpenAI => format!("{}/v1/chat/completions", key.provider.domain()),
         Provider::Hyperbolic => format!("{}/v1/chat/completions", key.provider.domain()),
+        Provider::Google => format!("{}/v1beta/openai/chat/completions", key.provider.domain()),
         _ => format!("{}/v1/openai/chat/completions", key.provider.domain()),
     }
 }
@@ -28,11 +29,14 @@ async fn request_chat_completion(
     messages: &[Message],
 ) -> Result<Response, Box<dyn Error + Send + Sync>> {
     let address = address(key);
-    let body = serde_json::json!({
+    let mut body = serde_json::json!({
         "model": model,
         "messages": messages,
-        "stream": stream,
     });
+    // only set stream if true
+    if stream {
+        body["stream"] = serde_json::Value::Bool(true);
+    }
     let client = reqwest::Client::new();
     let resp = client
         .post(address)
@@ -85,7 +89,7 @@ fn extract_error(body: &Value) -> String {
     if let Some(message) = body.get("message") {
         return message.as_str().unwrap_or(body.to_string().as_str()).to_string();
     }
-    "Unknown error".to_string()
+    format!("Unknown error: {}", body.to_string())
 }
 
 pub async fn chat_completion(
@@ -95,12 +99,16 @@ pub async fn chat_completion(
 ) -> Result<ChatCompletion, Box<dyn Error + Send + Sync>> {
     let stream = false;
     let resp = request_chat_completion(key, model, stream, messages).await?;
+    let status = resp.status();
     let text = resp.text().await?;
+    if text.is_empty() {
+        return Err(format!("Received empty response with status code: {}", status).into());
+    }
     let json = match serde_json::from_str::<ChatCompletion>(&text) {
         Ok(json) => json,
         Err(_e) => match serde_json::from_str::<Value>(&text) {
             Ok(error) => return Err(format!("{}", extract_error(&error)).into()),
-            Err(e) => return Err(format!("Error parsing response: {} in text: {}", e, text).into()),
+            Err(e) => return Err(format!("Error parsing response: {} in text: '{}'", e, text).into()),
         },
     };
     Ok(json)

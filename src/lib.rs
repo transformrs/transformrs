@@ -31,17 +31,18 @@ pub enum Api {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Provider {
-    OpenAI,
-    DeepInfra,
-    Groq,
-    Azure,
     Amazon,
-    TogetherAI,
+    Azure,
+    DeepInfra,
     Fireworks,
     FriendliAI,
+    Google,
+    Groq,
     Hyperbolic,
     Nebius,
     Novita,
+    OpenAI,
+    TogetherAI,
 }
 
 impl std::fmt::Display for Provider {
@@ -53,17 +54,18 @@ impl std::fmt::Display for Provider {
 impl Provider {
     pub fn domain(&self) -> String {
         match self {
-            Provider::OpenAI => "https://api.openai.com",
-            Provider::DeepInfra => "https://api.deepinfra.com",
-            Provider::Groq => "https://api.groq.com",
-            Provider::Azure => "https://api.azure.com",
             Provider::Amazon => "https://api.amazon.com",
-            Provider::TogetherAI => "https://api.together.ai",
+            Provider::Azure => "https://api.azure.com",
+            Provider::DeepInfra => "https://api.deepinfra.com",
             Provider::Fireworks => "https://api.fireworks.ai",
             Provider::FriendliAI => "https://api.friendli.ai",
+            Provider::Google => "https://generativelanguage.googleapis.com",
+            Provider::Groq => "https://api.groq.com",
             Provider::Hyperbolic => "https://api.hyperbolic.xyz",
             Provider::Nebius => "https://api.nebi.us",
             Provider::Novita => "https://api.novita.ai",
+            Provider::OpenAI => "https://api.openai.com",
+            Provider::TogetherAI => "https://api.together.ai",
         }
         .to_string()
     }
@@ -124,10 +126,18 @@ pub fn load_keys(path: &str) -> Keys {
     let mut keys = vec![];
 
     let providers = [
-        Provider::OpenAI,
-        Provider::DeepInfra,
-        Provider::Hyperbolic,
+        Provider::Amazon,
         Provider::Azure,
+        Provider::DeepInfra,
+        Provider::Fireworks,
+        Provider::FriendliAI,
+        Provider::Google,
+        Provider::Groq,
+        Provider::Hyperbolic,
+        Provider::Nebius,
+        Provider::Novita,
+        Provider::OpenAI,
+        Provider::TogetherAI,
     ];
     for provider in providers {
         if let Ok(key_value) = std::env::var(provider.key_name()) {

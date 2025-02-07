@@ -76,6 +76,13 @@ async fn test_chat_completion_no_stream_openai() {
 }
 
 #[tokio::test]
+async fn test_chat_completion_no_stream_google() {
+    test_chat_completion_no_stream(Provider::Google, "gemini-1.5-pro")
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
 async fn test_chat_completion_no_stream_openai_error() {
     let out = test_chat_completion_no_stream(Provider::OpenAI, "foo")
         .await;
