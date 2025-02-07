@@ -3,6 +3,7 @@ use crate::Key;
 use crate::Message;
 use crate::Provider;
 use futures::Stream;
+use serde_json::Value;
 use futures::StreamExt;
 use futures::TryStreamExt;
 use reqwest;
@@ -71,8 +72,20 @@ pub struct ChatCompletion {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChatCompletionError {
-    pub object: String,
+    pub object: Option<String>,
     pub message: String,
+}
+
+fn extract_error(body: &Value) -> String {
+    if let Some(error) = body.get("error") {
+        if let Some(message) = error.get("message") {
+            return message.as_str().unwrap_or(body.to_string().as_str()).to_string();
+        }
+    }
+    if let Some(message) = body.get("message") {
+        return message.as_str().unwrap_or(body.to_string().as_str()).to_string();
+    }
+    "Unknown error".to_string()
 }
 
 pub async fn chat_completion(
@@ -85,8 +98,8 @@ pub async fn chat_completion(
     let text = resp.text().await?;
     let json = match serde_json::from_str::<ChatCompletion>(&text) {
         Ok(json) => json,
-        Err(_e) => match serde_json::from_str::<ChatCompletionError>(&text) {
-            Ok(error) => return Err(format!("{}: {}", error.message, error.object).into()),
+        Err(_e) => match serde_json::from_str::<Value>(&text) {
+            Ok(error) => return Err(format!("{}", extract_error(&error)).into()),
             Err(e) => return Err(format!("Error parsing response: {} in text: {}", e, text).into()),
         },
     };
@@ -145,6 +158,8 @@ pub async fn stream_chat_completion(
                         if json_str.is_empty() {
                             return None;
                         }
+                        // To debug intermittent EOF while parsing string.
+                        println!("{}", json_str);
                         Some(
                             serde_json::from_str::<ChatCompletionChunk>(json_str)
                                 .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>),

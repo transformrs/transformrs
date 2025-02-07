@@ -36,8 +36,13 @@ async fn test_chat_completion_no_stream(
     let key = keys.for_provider(&provider).unwrap();
     let messages = messages.clone();
     let resp = openai::chat_completion(&key, model, &messages)
-        .await
-        .unwrap();
+        .await;
+    let resp = match resp {
+        Ok(resp) => resp,
+        Err(e) => {
+            return Err(e);
+        }
+    };
     println!("{:?}", resp);
     assert_eq!(resp.object, "chat.completion");
     assert_eq!(resp.choices.len(), 1);
@@ -54,10 +59,30 @@ async fn test_chat_completion_no_stream_deepinfra() {
 }
 
 #[tokio::test]
+async fn test_chat_completion_no_stream_deepinfra_error() {
+    let out = test_chat_completion_no_stream(Provider::DeepInfra, "foo")
+        .await;
+    assert!(out.is_err());
+    let err = out.unwrap_err();
+    println!("{}", err);
+    assert!(err.to_string().contains("does not exist"));
+}
+
+#[tokio::test]
 async fn test_chat_completion_no_stream_openai() {
     test_chat_completion_no_stream(Provider::OpenAI, "gpt-4o-mini")
         .await
         .unwrap();
+}
+
+#[tokio::test]
+async fn test_chat_completion_no_stream_openai_error() {
+    let out = test_chat_completion_no_stream(Provider::OpenAI, "foo")
+        .await;
+    assert!(out.is_err());
+    let err = out.unwrap_err();
+    println!("{}", err);
+    assert!(err.to_string().contains("does not exist"));
 }
 
 #[tokio::test]
