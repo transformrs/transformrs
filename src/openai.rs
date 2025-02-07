@@ -29,14 +29,14 @@ async fn request_chat_completion(
     messages: &[Message],
 ) -> Result<Response, Box<dyn Error + Send + Sync>> {
     let address = address(key);
-    let mut body = serde_json::json!({
+    let body = serde_json::json!({
         "model": model,
         "messages": messages,
+        "stream": stream,
     });
-    // only set stream if true
-    if stream {
-        body["stream"] = serde_json::Value::Bool(true);
-    }
+    println!("{}", address);
+    println!("{}", body.to_string());
+    println!("{:?}", request_headers(key)?);
     let client = reqwest::Client::new();
     let resp = client
         .post(address)
