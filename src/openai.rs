@@ -164,22 +164,13 @@ fn process_line(line: &str, buffer: &mut String) -> Option<ChatCompletionChunk> 
         if json_str.is_empty() {
             return None;
         }
-        // To debug intermittent EOF while parsing string.
-        println!("{}", json_str);
-        match parse_str(json_str) {
-            Some(json) => Some(json),
-            None => {
-                buffer.push_str(json_str);
-                None
-            }
-        }
+        
+        todo!()
     } else {
         None
     }
 }
 
-/// Convert a streaming response into an iterator of JSON messages.
-/// Each message represents a complete chunk from the stream.
 pub async fn stream_chat_completion(
     key: &Key,
     model: &str,
