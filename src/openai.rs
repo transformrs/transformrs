@@ -141,7 +141,7 @@ pub struct ChunkChoice {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChatCompletionChunk {
-    pub id: String,
+    pub id: Option<String>,
     pub object: String,
     pub created: u64,
     pub model: String,
