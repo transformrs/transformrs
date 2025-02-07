@@ -3,13 +3,13 @@ use crate::Key;
 use crate::Message;
 use crate::Provider;
 use futures::Stream;
-use serde_json::Value;
 use futures::StreamExt;
 use futures::TryStreamExt;
 use reqwest;
 use reqwest::Response;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_json::Value;
 use std::error::Error;
 use std::pin::Pin;
 
@@ -17,6 +17,7 @@ fn address(key: &Key) -> String {
     match key.provider {
         Provider::OpenAI => format!("{}/v1/chat/completions", key.provider.domain()),
         Provider::Hyperbolic => format!("{}/v1/chat/completions", key.provider.domain()),
+        Provider::Google => format!("{}/v1beta/openai/chat/completions", key.provider.domain()),
         _ => format!("{}/v1/openai/chat/completions", key.provider.domain()),
     }
 }
@@ -33,7 +34,14 @@ async fn request_chat_completion(
         "messages": messages,
         "stream": stream,
     });
-    let client = reqwest::Client::new();
+    let client = if key.provider == Provider::Google {
+        // Without this, the request will fail with 400 INVALID_ARGUMENT.
+        // According to the docs, a 400 error is returned when the request body
+        // is malformed.  Why rustls tls fixes this, I do not know.
+        reqwest::Client::builder().use_rustls_tls().build()?
+    } else {
+        reqwest::Client::new()
+    };
     let resp = client
         .post(address)
         .headers(request_headers(key)?)
@@ -79,13 +87,19 @@ pub struct ChatCompletionError {
 fn extract_error(body: &Value) -> String {
     if let Some(error) = body.get("error") {
         if let Some(message) = error.get("message") {
-            return message.as_str().unwrap_or(body.to_string().as_str()).to_string();
+            return message
+                .as_str()
+                .unwrap_or(body.to_string().as_str())
+                .to_string();
         }
     }
     if let Some(message) = body.get("message") {
-        return message.as_str().unwrap_or(body.to_string().as_str()).to_string();
+        return message
+            .as_str()
+            .unwrap_or(body.to_string().as_str())
+            .to_string();
     }
-    "Unknown error".to_string()
+    format!("Unknown error: {body}")
 }
 
 pub async fn chat_completion(
@@ -95,12 +109,18 @@ pub async fn chat_completion(
 ) -> Result<ChatCompletion, Box<dyn Error + Send + Sync>> {
     let stream = false;
     let resp = request_chat_completion(key, model, stream, messages).await?;
+    let status = resp.status();
     let text = resp.text().await?;
+    if text.is_empty() {
+        return Err(format!("Received empty response with status code: {}", status).into());
+    }
     let json = match serde_json::from_str::<ChatCompletion>(&text) {
         Ok(json) => json,
         Err(_e) => match serde_json::from_str::<Value>(&text) {
-            Ok(error) => return Err(format!("{}", extract_error(&error)).into()),
-            Err(e) => return Err(format!("Error parsing response: {} in text: {}", e, text).into()),
+            Ok(error) => return Err(extract_error(&error).into()),
+            Err(e) => {
+                return Err(format!("Error parsing response: {} in text: '{}'", e, text).into())
+            }
         },
     };
     Ok(json)

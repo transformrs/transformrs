@@ -35,8 +35,7 @@ async fn test_chat_completion_no_stream(
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).unwrap();
     let messages = messages.clone();
-    let resp = openai::chat_completion(&key, model, &messages)
-        .await;
+    let resp = openai::chat_completion(&key, model, &messages).await;
     let resp = match resp {
         Ok(resp) => resp,
         Err(e) => {
@@ -60,8 +59,7 @@ async fn test_chat_completion_no_stream_deepinfra() {
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_deepinfra_error() {
-    let out = test_chat_completion_no_stream(Provider::DeepInfra, "foo")
-        .await;
+    let out = test_chat_completion_no_stream(Provider::DeepInfra, "foo").await;
     assert!(out.is_err());
     let err = out.unwrap_err();
     println!("{}", err);
@@ -76,9 +74,15 @@ async fn test_chat_completion_no_stream_openai() {
 }
 
 #[tokio::test]
+async fn test_chat_completion_no_stream_google() {
+    test_chat_completion_no_stream(Provider::Google, "gemini-1.5-flash")
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
 async fn test_chat_completion_no_stream_openai_error() {
-    let out = test_chat_completion_no_stream(Provider::OpenAI, "foo")
-        .await;
+    let out = test_chat_completion_no_stream(Provider::OpenAI, "foo").await;
     assert!(out.is_err());
     let err = out.unwrap_err();
     println!("{}", err);
