@@ -184,16 +184,13 @@ pub async fn stream_chat_completion(
     key: &Key,
     model: &str,
     messages: &[Message],
-) -> Result<
-    Pin<Box<dyn Stream<Item = Result<ChatCompletionChunk, Box<dyn Error + Send + Sync>>> + Send>>,
-    Box<dyn Error + Send + Sync>,
-> {
+) -> Result<Pin<Box<dyn Stream<Item = ChatCompletionChunk> + Send>>, Box<dyn Error + Send + Sync>> {
     let resp = request_chat_completion(key, model, true, messages).await?;
     let mut buffer = String::new();
     let stream = resp
         .bytes_stream()
         .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>)
-        .flat_map(|chunk_result| {
+        .flat_map(move |chunk_result| {
             let chunk = chunk_result.unwrap();
             let text = String::from_utf8_lossy(&chunk);
             // Split on "data: " prefix and filter empty lines
