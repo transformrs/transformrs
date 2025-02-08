@@ -45,6 +45,7 @@ async fn test_chat_completion_no_stream(
             return Err(e);
         }
     };
+    let resp = resp.structured()?;
     println!("{:?}", resp);
     assert_eq!(resp.object, "chat.completion");
     assert_eq!(resp.choices.len(), 1);

@@ -102,28 +102,60 @@ fn extract_error(body: &Value) -> String {
     format!("Unknown error: {body}")
 }
 
+/// Response from the OpenAI API.
+///
+/// This is a wrapper around the `serde_json::Value` which can either be
+/// extracted as a structured object or left as a raw value. Allowing clients to
+/// extract the unstructured response is done to allow for access to fields that
+/// might be added in the future, handle edge cases, or custom processing.
+///
+/// You might think while reading, why not keep it simple and that's a good
+/// point.  DeepSeek R1 had a great observation about this: "API design is like
+/// walking the tightrope. The challenge is to build constraints that empower,
+/// not confine."
+pub struct ChatCompletionResponse {
+    status: u16,
+    resp: Value,
+}
+
+impl ChatCompletionResponse {
+    pub fn raw(&self) -> &Value {
+        &self.resp
+    }
+    pub fn structured(&self) -> Result<ChatCompletion, Box<dyn Error + Send + Sync>> {
+        let text = self.resp.to_string();
+        if text.is_empty() {
+            return Err(
+                format!("Received empty response with status code: {}", self.status).into(),
+            );
+        }
+        let json = match serde_json::from_str::<ChatCompletion>(&text) {
+            Ok(json) => json,
+            Err(_e) => match serde_json::from_str::<Value>(&text) {
+                Ok(error) => return Err(extract_error(&error).into()),
+                Err(e) => {
+                    return Err(format!("Error parsing response: {} in text: '{}'", e, text).into())
+                }
+            },
+        };
+        Ok(json)
+    }
+}
+
 pub async fn chat_completion(
     key: &Key,
     model: &str,
     messages: &[Message],
-) -> Result<ChatCompletion, Box<dyn Error + Send + Sync>> {
+) -> Result<ChatCompletionResponse, Box<dyn Error + Send + Sync>> {
     let stream = false;
     let resp = request_chat_completion(key, model, stream, messages).await?;
     let status = resp.status();
     let text = resp.text().await?;
-    if text.is_empty() {
-        return Err(format!("Received empty response with status code: {}", status).into());
-    }
-    let json = match serde_json::from_str::<ChatCompletion>(&text) {
-        Ok(json) => json,
-        Err(_e) => match serde_json::from_str::<Value>(&text) {
-            Ok(error) => return Err(extract_error(&error).into()),
-            Err(e) => {
-                return Err(format!("Error parsing response: {} in text: '{}'", e, text).into())
-            }
-        },
+    let chat_completion_response = ChatCompletionResponse {
+        status: status.into(),
+        resp: serde_json::from_str::<Value>(&text)?,
     };
-    Ok(json)
+    Ok(chat_completion_response)
 }
 
 #[derive(Debug, Serialize, Deserialize)]
