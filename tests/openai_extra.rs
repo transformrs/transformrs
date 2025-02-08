@@ -29,11 +29,7 @@ async fn test_chat_completion_stream_duration() {
     let mut timestamps = Vec::new();
     while let Some(resp) = stream.next().await {
         let timestamp = std::time::SystemTime::now();
-        let chunk = resp.unwrap().choices[0]
-            .delta
-            .content
-            .clone()
-            .unwrap_or_default();
+        let chunk = resp.choices[0].delta.content.clone().unwrap_or_default();
         content += &chunk;
         println!("{}", chunk);
         timestamps.push(timestamp);
