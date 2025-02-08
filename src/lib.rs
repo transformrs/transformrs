@@ -2,6 +2,8 @@ pub mod openai;
 pub mod text_to_image;
 pub mod text_to_speech;
 
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use reqwest::header::HeaderMap;
 use reqwest::header::HeaderValue;
 use serde::Deserialize;
@@ -173,6 +175,11 @@ impl Message {
                 image_url: image_url.to_string(),
             }]),
         }
+    }
+    pub fn from_image_bytes(role: &str, image_type: &str, image: &[u8]) -> Self {
+        let base64 = BASE64_STANDARD.encode(image);
+        let image_url = format!("data:image/{image_type};base64,{base64}");
+        Self::from_image_url(role, &image_url)
     }
 }
 

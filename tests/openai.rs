@@ -62,7 +62,7 @@ async fn test_hello_chat_completion_no_stream(
     test_chat_completion_no_stream(hello_messages(), provider, model, Some("hello world")).await
 }
 
-async fn test_image_chat_completion_no_stream(
+async fn test_image_url_chat_completion_no_stream(
     provider: Provider,
     model: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -71,6 +71,19 @@ async fn test_image_chat_completion_no_stream(
         Message::from_str("system", "You are a helpful assistant."),
         Message::from_str("user", "Describe this image in one sentence."),
         Message::from_image_url("user", image_url),
+    ];
+    test_chat_completion_no_stream(messages, provider, model, None).await
+}
+
+async fn test_image_chat_completion_no_stream(
+    provider: Provider,
+    model: &str,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let image = include_bytes!("tmp.jpg");
+    let messages = vec![
+        Message::from_str("system", "You are a helpful assistant."),
+        Message::from_str("user", "Describe this image in one sentence."),
+        Message::from_image_bytes("user", "jpeg", image),
     ];
     test_chat_completion_no_stream(messages, provider, model, None).await
 }
@@ -93,6 +106,14 @@ async fn test_chat_completion_no_stream_deepinfra_error() {
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_deepinfra_image() {
+    let model = "meta-llama/Llama-3.2-11B-Vision-Instruct";
+    test_image_url_chat_completion_no_stream(Provider::DeepInfra, model)
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn test_chat_completion_no_stream_deepinfra_image_base64() {
     let model = "meta-llama/Llama-3.2-11B-Vision-Instruct";
     test_image_chat_completion_no_stream(Provider::DeepInfra, model)
         .await
@@ -140,7 +161,7 @@ async fn test_chat_completion_no_stream_openai_error() {
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_openai_image() {
-    test_image_chat_completion_no_stream(Provider::OpenAI, "gpt-4o-mini")
+    test_image_url_chat_completion_no_stream(Provider::OpenAI, "gpt-4o-mini")
         .await
         .unwrap();
 }
