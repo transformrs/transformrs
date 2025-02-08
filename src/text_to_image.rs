@@ -42,7 +42,7 @@ fn address(key: &Key, model: &str) -> String {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Base64Image {
     pub index: u64,
     pub random_seed: Option<u64>,
@@ -74,7 +74,7 @@ impl Base64Image {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Images {
     pub images: Vec<Base64Image>,
 }
