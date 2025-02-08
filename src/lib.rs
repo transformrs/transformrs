@@ -74,7 +74,19 @@ impl Provider {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct SubContent {
+    pub r#type: String,
+    pub text: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+enum Content {
+    Text(String),
+    Collection(Vec<SubContent>),
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Message {
     pub role: String,
     pub content: String,
