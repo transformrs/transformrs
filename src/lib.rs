@@ -94,10 +94,43 @@ impl SubContent {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug)]
 pub enum Content {
     Text(String),
     Collection(Vec<SubContent>),
+}
+
+impl Serialize for Content {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Content::Text(text) => serializer.serialize_str(text),
+            Content::Collection(items) => items.serialize(serializer),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Content {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = serde_json::Value::deserialize(deserializer)?;
+        if let serde_json::Value::String(text) = value {
+            Ok(Content::Text(text))
+        } else if let serde_json::Value::Array(items) = value {
+            let subcontent = items
+                .into_iter()
+                .map(SubContent::deserialize)
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap();
+            Ok(Content::Collection(subcontent))
+        } else {
+            Err(serde::de::Error::custom("Invalid content format"))
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

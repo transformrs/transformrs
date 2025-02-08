@@ -60,17 +60,6 @@ async fn test_chat_completion_no_stream_deepinfra() {
 }
 
 #[tokio::test]
-async fn test_chat_completion_no_stream_deepinfra_image() {
-    let messages = vec![
-        Message::from_str("system", "You are a helpful assistant."),
-        Message::from_str("user", "This is a test. Please respond with 'hello world'."),
-    ];
-    test_chat_completion_no_stream(messages, Provider::DeepInfra, MODEL)
-        .await
-        .unwrap();
-}
-
-#[tokio::test]
 async fn test_chat_completion_no_stream_deepinfra_error() {
     let out = test_chat_completion_no_stream(hello_messages(), Provider::DeepInfra, "foo").await;
     assert!(out.is_err());
@@ -118,6 +107,17 @@ async fn test_chat_completion_no_stream_openai_error() {
     assert!(err.to_string().contains("does not exist"));
 }
 
+#[tokio::test]
+async fn test_chat_completion_no_stream_openai_image() {
+    let messages = vec![
+        Message::from_str("system", "You are a helpful assistant."),
+        Message::from_str("user", "This is a test. Please respond with 'hello world'."),
+    ];
+    test_chat_completion_no_stream(messages, Provider::OpenAI, "gpt-4o-mini")
+        .await
+        .unwrap();
+}
+
 async fn chat_completion_stream_helper(
     key: &Key,
     model: &str,
@@ -132,6 +132,7 @@ async fn chat_completion_stream_helper(
         let chunk = resp.choices[0].delta.content.clone().unwrap_or_default();
         content += &chunk;
     }
+    let content = Content::Text(content);
     assert_eq!(canonicalize_content(&content), "hello world");
     Ok(())
 }

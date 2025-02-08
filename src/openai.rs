@@ -34,6 +34,7 @@ async fn request_chat_completion(
         "messages": messages,
         "stream": stream,
     });
+    println!("body: {}", body);
     let client = if key.provider == Provider::Google {
         // Without this, the request will fail with 400 INVALID_ARGUMENT.
         // According to the docs, a 400 error is returned when the request body
