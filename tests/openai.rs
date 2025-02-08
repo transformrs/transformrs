@@ -79,7 +79,7 @@ async fn test_image_chat_completion_no_stream(
     provider: Provider,
     model: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let image = include_bytes!("tmp.jpg");
+    let image = include_bytes!("sunset.jpg");
     let messages = vec![
         Message::from_str("system", "You are a helpful assistant."),
         Message::from_str("user", "Describe this image in one sentence."),
