@@ -74,34 +74,6 @@ impl Provider {
     }
 }
 
-pub struct TextContent {
-    pub r#type: String,
-    pub text: String,
-}
-
-impl TextContent {
-    pub fn new(text: &str) -> Self {
-        Self {
-            r#type: "text".to_string(),
-            text: text.to_string(),
-        }
-    }
-}
-
-pub struct ImageUrlContent {
-    pub r#type: String,
-    pub image_url: String,
-}
-
-impl ImageUrlContent {
-    pub fn new(image_url: &str) -> Self {
-        Self {
-            r#type: "image_url".to_string(),
-            image_url: image_url.to_string(),
-        }
-    }
-}
-
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum SubContent {
     TextContent { text: String },
