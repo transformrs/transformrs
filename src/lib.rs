@@ -74,14 +74,56 @@ impl Provider {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-struct SubContent {
+pub struct TextContent {
     pub r#type: String,
     pub text: String,
 }
 
+impl TextContent {
+    pub fn new(text: &str) -> Self {
+        Self {
+            r#type: "text".to_string(),
+            text: text.to_string(),
+        }
+    }
+}
+
+pub struct ImageUrlContent {
+    pub r#type: String,
+    pub image_url: String,
+}
+
+impl ImageUrlContent {
+    pub fn new(image_url: &str) -> Self {
+        Self {
+            r#type: "image_url".to_string(),
+            image_url: image_url.to_string(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
-enum Content {
+pub enum SubContent {
+    TextContent { text: String },
+    ImageUrlContent { image_url: String },
+}
+
+impl SubContent {
+    pub fn new(r#type: &str, text: &str) -> Self {
+        match r#type {
+            "text" => Self::TextContent {
+                text: text.to_string(),
+            },
+            "image_url" => Self::ImageUrlContent {
+                image_url: text.to_string(),
+            },
+            _ => panic!("Invalid subcontent type: {}", r#type),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum Content {
     Text(String),
     Collection(Vec<SubContent>),
 }
