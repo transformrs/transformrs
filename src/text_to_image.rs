@@ -88,7 +88,7 @@ impl ImageResponse {
     pub fn raw(&self) -> &Value {
         &self.resp
     }
-    pub fn parsed(&self) -> Result<Images, Box<dyn Error + Send + Sync>> {
+    pub fn structured(&self) -> Result<Images, Box<dyn Error + Send + Sync>> {
         let json: Images = if self.provider == Provider::DeepInfra {
             let image = self.resp["images"][0].clone();
             let images: Vec<Base64Image> = vec![Base64Image {

@@ -17,7 +17,7 @@ async fn test_text_to_image() {
         .await
         .unwrap();
 
-    let encoded = &resp.parsed().unwrap().images[0];
+    let encoded = &resp.structured().unwrap().images[0];
     let image = encoded.base64_decode().unwrap();
     let mut file = File::create("tests/tmp.jpg").unwrap();
     file.write_all(&image.image).unwrap();
@@ -36,7 +36,7 @@ async fn text_to_image_helper(
         .await
         .unwrap();
 
-    let encoded = &resp.parsed().unwrap().images[0];
+    let encoded = &resp.structured().unwrap().images[0];
     let image = encoded.base64_decode().unwrap();
     Ok(image)
 }

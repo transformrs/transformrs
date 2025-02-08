@@ -15,6 +15,7 @@ async fn test_tts() {
     let resp = transformrs::text_to_speech::tts(&key, config, &model, msg)
         .await
         .unwrap();
+    let resp = resp.structured().unwrap();
     assert_eq!(resp.output_format, "mp3");
     let bytes = resp.base64_decode().unwrap();
     assert!(bytes.len() > 0);

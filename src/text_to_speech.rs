@@ -9,6 +9,7 @@ use base64::prelude::*;
 use reqwest;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_json::Value;
 use std::error::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -57,12 +58,31 @@ impl Speech {
     }
 }
 
+pub struct SpeechResponse {
+    resp: Value,
+}
+
+impl SpeechResponse {
+    pub fn raw(&self) -> &Value {
+        &self.resp
+    }
+    pub fn structured(&self) -> Result<Speech, Box<dyn Error + Send + Sync>> {
+        let json = match serde_json::from_value(self.resp.clone()) {
+            Ok(json) => json,
+            Err(e) => {
+                return Err(format!("{e} in response:\n{}", self.resp).into());
+            }
+        };
+        Ok(json)
+    }
+}
+
 pub async fn tts(
     key: &Key,
     config: TTSConfig,
     model: &str,
     text: &str,
-) -> Result<Speech, Box<dyn Error + Send + Sync>> {
+) -> Result<SpeechResponse, Box<dyn Error + Send + Sync>> {
     let address = address(key, model);
     let mut body = serde_json::json!({
         "text": text,
@@ -84,6 +104,8 @@ pub async fn tts(
         .json(&body)
         .send()
         .await?;
-    let json = resp.json::<Speech>().await?;
-    Ok(json)
+    let speech_response = SpeechResponse {
+        resp: resp.json::<Value>().await?,
+    };
+    Ok(speech_response)
 }
