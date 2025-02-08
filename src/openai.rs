@@ -149,25 +149,41 @@ pub struct ChatCompletionChunk {
     pub choices: Vec<ChunkChoice>,
 }
 
-fn process_line(line: &str, buffer: &mut String) -> Option<ChatCompletionChunk> {
-    fn parse_str(line: &str) -> Option<ChatCompletionChunk> {
-        match serde_json::from_str::<ChatCompletionChunk>(line) {
+fn parse_data(line: &str) -> Option<ChatCompletionChunk> {
+    if let Some(json_str) = line.strip_prefix("data: ") {
+        if json_str == "[DONE]" || json_str.is_empty() {
+            return None;
+        }
+        match serde_json::from_str::<ChatCompletionChunk>(json_str) {
             Ok(json) => Some(json),
             Err(_e) => None,
         }
-    }
-
-    if let Some(json_str) = line.strip_prefix("data: ") {
-        if json_str == "[DONE]" {
-            return None;
-        }
-        if json_str.is_empty() {
-            return None;
-        }
-        
-        todo!()
     } else {
         None
+    }
+}
+
+fn process_line(line: &str, buffer: &mut String) -> Option<ChatCompletionChunk> {
+    if buffer.is_empty() {
+        match parse_data(line) {
+            Some(chunk) => Some(chunk),
+            None => {
+                buffer.push_str(line);
+                None
+            }
+        }
+    } else {
+        let line = format!("{}{}", buffer, line);
+        match parse_data(&line) {
+            Some(chunk) => {
+                buffer.clear();
+                Some(chunk)
+            }
+            None => {
+                buffer.push_str(&line);
+                None
+            }
+        }
     }
 }
 

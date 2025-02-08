@@ -124,7 +124,6 @@ async fn chat_completion_stream_helper(
         .unwrap();
     let mut content = String::new();
     while let Some(resp) = stream.next().await {
-        let resp = resp.unwrap();
         assert_eq!(resp.choices.len(), 1);
         let chunk = resp.choices[0].delta.content.clone().unwrap_or_default();
         content += &chunk;
