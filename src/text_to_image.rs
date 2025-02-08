@@ -79,11 +79,41 @@ pub struct Images {
     pub images: Vec<Base64Image>,
 }
 
+pub struct ImageResponse {
+    provider: Provider,
+    resp: Value,
+}
+
+impl ImageResponse {
+    pub fn raw(&self) -> &Value {
+        &self.resp
+    }
+    pub fn parsed(&self) -> Result<Images, Box<dyn Error + Send + Sync>> {
+        let json: Images = if self.provider == Provider::DeepInfra {
+            let image = self.resp["images"][0].clone();
+            let images: Vec<Base64Image> = vec![Base64Image {
+                index: 0,
+                random_seed: None,
+                image: image.as_str().unwrap().to_string(),
+            }];
+            Images { images }
+        } else {
+            match serde_json::from_value(self.resp.clone()) {
+                Ok(json) => json,
+                Err(e) => {
+                    return Err(format!("{e} in response:\n{}", self.resp).into());
+                }
+            }
+        };
+        Ok(json)
+    }
+}
+
 pub async fn text_to_image(
     key: &Key,
     config: TTIConfig,
     prompt: &str,
-) -> Result<Images, Box<dyn Error + Send + Sync>> {
+) -> Result<ImageResponse, Box<dyn Error + Send + Sync>> {
     let address = address(key, &config.model);
     let mut body = serde_json::json!({
         "model_name": config.model,
@@ -108,23 +138,9 @@ pub async fn text_to_image(
         .json(&body)
         .send()
         .await?;
-    let text = resp.text().await?;
-    let json: Images = if key.provider == Provider::DeepInfra {
-        let value: Value = serde_json::from_str(&text)?;
-        let image = value["images"][0].clone();
-        let images: Vec<Base64Image> = vec![Base64Image {
-            index: 0,
-            random_seed: None,
-            image: image.as_str().unwrap().to_string(),
-        }];
-        Images { images }
-    } else {
-        match serde_json::from_str(&text) {
-            Ok(json) => json,
-            Err(e) => {
-                panic!("{e} in response:\n{text}");
-            }
-        }
+    let image_response = ImageResponse {
+        provider: key.provider.clone(),
+        resp: resp.json::<Value>().await?,
     };
-    Ok(json)
+    Ok(image_response)
 }
