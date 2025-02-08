@@ -1,6 +1,6 @@
 [package]
 name = "transformrs"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Rik Huijzer <github@huijzer.xyz>"]
 description = "An interface for AI APIs"
 edition = "2021"
