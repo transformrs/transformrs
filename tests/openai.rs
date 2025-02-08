@@ -3,24 +3,23 @@ extern crate transformrs;
 use futures_util::stream::StreamExt;
 use std::error::Error;
 use transformrs::openai;
+use transformrs::Content;
 use transformrs::Key;
 use transformrs::Message;
 use transformrs::Provider;
-use transformrs::Content;
 
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct";
 
 fn canonicalize_content(content: &Content) -> String {
     match content {
-        Content::Text(text) => {
-            let lower = text.to_lowercase();
-            lower.trim().trim_end_matches('.')
-        },
+        Content::Text(text) => text
+            .to_string()
+            .to_lowercase()
+            .trim()
+            .trim_end_matches('.')
+            .to_string(),
         Content::Collection(_) => panic!("Collection not supported"),
-    }.to_lowercase()
-        .trim()
-        .trim_end_matches('.')
-        .to_string()
+    }
 }
 
 fn hello_messages() -> Vec<Message> {
@@ -123,7 +122,7 @@ async fn chat_completion_stream_helper(
     key: &Key,
     model: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let messages =  hello_messages();
+    let messages = hello_messages();
     let mut stream = openai::stream_chat_completion(&key, model, &messages)
         .await
         .unwrap();
