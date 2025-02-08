@@ -4,10 +4,12 @@
 
 use crate::request_headers;
 use crate::Key;
+use crate::Provider;
 use base64::prelude::*;
 use reqwest;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_json::Value;
 use std::error::Error;
 
 /// Configuration for text-to-image.
@@ -32,29 +34,49 @@ impl Default for TTIConfig {
     }
 }
 
-fn address(key: &Key) -> String {
-    format!("{}/v1/image/generation", key.provider.domain())
+fn address(key: &Key, model: &str) -> String {
+    match key.provider {
+        Provider::Hyperbolic => format!("{}/v1/image/generation", key.provider.domain()),
+        Provider::DeepInfra => format!("{}/v1/inference/{}", key.provider.domain(), model),
+        _ => format!("{}/v1/image/generation", key.provider.domain()),
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Image {
+pub struct Base64Image {
     pub index: u64,
     pub random_seed: Option<u64>,
     pub image: String,
 }
 
-impl Image {
-    pub fn base64_decode(&self) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
-        let bytes = BASE64_STANDARD
-            .decode(self.image.as_bytes())
-            .expect("no decode");
-        Ok(bytes)
+pub struct Image {
+    pub filetype: String,
+    pub image: Vec<u8>,
+}
+
+impl Base64Image {
+    pub fn base64_decode(&self) -> Result<Image, Box<dyn Error + Send + Sync>> {
+        let re = regex::Regex::new(r"^data:image/(\w+);base64,").unwrap();
+        let filetype = match re
+            .captures(&self.image)
+            .map(|cap| cap.get(1).unwrap().as_str())
+        {
+            Some("png") => "png",
+            Some("jpg" | "jpeg") => "jpg",
+            _ => "unknown",
+        };
+        let image = re.replace(&self.image, "").to_string();
+        let bytes = BASE64_STANDARD.decode(image.as_bytes()).expect("no decode");
+        Ok(Image {
+            filetype: filetype.to_string(),
+            image: bytes,
+        })
     }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Images {
-    pub images: Vec<Image>,
+    pub images: Vec<Base64Image>,
 }
 
 pub async fn text_to_image(
@@ -62,7 +84,7 @@ pub async fn text_to_image(
     config: TTIConfig,
     prompt: &str,
 ) -> Result<Images, Box<dyn Error + Send + Sync>> {
-    let address = address(key);
+    let address = address(key, &config.model);
     let mut body = serde_json::json!({
         "model_name": config.model,
         "prompt": prompt,
@@ -87,10 +109,21 @@ pub async fn text_to_image(
         .send()
         .await?;
     let text = resp.text().await?;
-    let json: Images = match serde_json::from_str(&text) {
-        Ok(json) => json,
-        Err(e) => {
-            panic!("{e} in response:\n{text}");
+    let json: Images = if key.provider == Provider::DeepInfra {
+        let value: Value = serde_json::from_str(&text)?;
+        let image = value["images"][0].clone();
+        let images: Vec<Base64Image> = vec![Base64Image {
+            index: 0,
+            random_seed: None,
+            image: image.as_str().unwrap().to_string(),
+        }];
+        Images { images }
+    } else {
+        match serde_json::from_str(&text) {
+            Ok(json) => json,
+            Err(e) => {
+                panic!("{e} in response:\n{text}");
+            }
         }
     };
     Ok(json)
