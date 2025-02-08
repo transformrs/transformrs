@@ -74,10 +74,106 @@ impl Provider {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
+pub enum SubContent {
+    TextContent { text: String },
+    ImageUrlContent { image_url: String },
+}
+
+impl SubContent {
+    pub fn new(r#type: &str, text: &str) -> Self {
+        match r#type {
+            "text" => Self::TextContent {
+                text: text.to_string(),
+            },
+            "image_url" => Self::ImageUrlContent {
+                image_url: text.to_string(),
+            },
+            _ => panic!("Invalid subcontent type: {}", r#type),
+        }
+    }
+}
+
+impl Serialize for SubContent {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            SubContent::TextContent { text } => serializer.serialize_str(text),
+            SubContent::ImageUrlContent { image_url } => {
+                let json = serde_json::json!({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": image_url
+                    }
+                });
+                json.serialize(serializer)
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum Content {
+    Text(String),
+    Collection(Vec<SubContent>),
+}
+
+impl Serialize for Content {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Content::Text(text) => serializer.serialize_str(text),
+            Content::Collection(items) => items.serialize(serializer),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Content {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = serde_json::Value::deserialize(deserializer)?;
+        if let serde_json::Value::String(text) = value {
+            Ok(Content::Text(text))
+        } else if let serde_json::Value::Array(items) = value {
+            let subcontent = items
+                .into_iter()
+                .map(SubContent::deserialize)
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap();
+            Ok(Content::Collection(subcontent))
+        } else {
+            Err(serde::de::Error::custom("Invalid content format"))
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Message {
     pub role: String,
-    pub content: String,
+    pub content: Content,
+}
+
+impl Message {
+    pub fn from_str(role: &str, text: &str) -> Self {
+        Self {
+            role: role.to_string(),
+            content: Content::Text(text.to_string()),
+        }
+    }
+    pub fn from_image_url(role: &str, image_url: &str) -> Self {
+        Self {
+            role: role.to_string(),
+            content: Content::Collection(vec![SubContent::ImageUrlContent {
+                image_url: image_url.to_string(),
+            }]),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
