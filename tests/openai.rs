@@ -22,14 +22,8 @@ async fn test_chat_completion_no_stream(
     model: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let messages = vec![
-        Message {
-            role: "system".to_string(),
-            content: "You are a helpful assistant.".to_string(),
-        },
-        Message {
-            role: "user".to_string(),
-            content: "This is a test. Please respond with 'hello world'.".to_string(),
-        },
+        Message::new("system", "You are a helpful assistant."),
+        Message::new("user", "This is a test. Please respond with 'hello world'."),
     ];
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).unwrap();
@@ -109,14 +103,8 @@ async fn chat_completion_stream_helper(
     model: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let messages = vec![
-        Message {
-            role: "system".to_string(),
-            content: "You are a helpful assistant.".to_string(),
-        },
-        Message {
-            role: "user".to_string(),
-            content: "This is a test. Please respond with 'hello world'.".to_string(),
-        },
+        Message::new("system", "You are a helpful assistant."),
+        Message::new("user", "This is a test. Please respond with 'hello world'."),
     ];
 
     let mut stream = openai::stream_chat_completion(&key, model, &messages)

@@ -92,6 +92,15 @@ pub struct Message {
     pub content: String,
 }
 
+impl Message {
+    pub fn new(role: &str, content: &str) -> Self {
+        Self {
+            role: role.to_string(),
+            content: content.to_string(),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Key {
     pub provider: Provider,

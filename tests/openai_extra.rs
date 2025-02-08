@@ -11,14 +11,8 @@ const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct-Turbo";
 async fn test_chat_completion_stream_duration() {
     // Verify that the stream is passing messages through once they are available.
     let messages = vec![
-        Message {
-            role: "system".to_string(),
-            content: "You are a helpful assistant.".to_string(),
-        },
-        Message {
-            role: "user".to_string(),
-            content: "Tell a joke about a car.".to_string(),
-        },
+        Message::new("system", "You are a helpful assistant."),
+        Message::new("user", "Tell a joke about a car."),
     ];
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&Provider::DeepInfra).unwrap();
