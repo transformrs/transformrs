@@ -146,6 +146,14 @@ impl Message {
             content: Content::Text(text.to_string()),
         }
     }
+    pub fn from_image_url(role: &str, image_url: &str) -> Self {
+        Self {
+            role: role.to_string(),
+            content: Content::Collection(vec![SubContent::ImageUrlContent {
+                image_url: image_url.to_string(),
+            }]),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

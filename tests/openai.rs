@@ -7,6 +7,7 @@ use transformrs::Content;
 use transformrs::Key;
 use transformrs::Message;
 use transformrs::Provider;
+use transformrs::SubContent;
 
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct";
 
@@ -109,9 +110,11 @@ async fn test_chat_completion_no_stream_openai_error() {
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_openai_image() {
+    let image_url = "https://commons.wikimedia.org/wiki/File:Groningen_Grote_Markt_3.jpg#/media/Bestand:Groningen_Grote_Markt_3.jpg";
     let messages = vec![
         Message::from_str("system", "You are a helpful assistant."),
-        Message::from_str("user", "This is a test. Please respond with 'hello world'."),
+        Message::from_str("user", "Describe this image in one sentence."),
+        Message::from_image_url("user", image_url),
     ];
     test_chat_completion_no_stream(messages, Provider::OpenAI, "gpt-4o-mini")
         .await
