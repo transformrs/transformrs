@@ -7,7 +7,6 @@ use transformrs::Content;
 use transformrs::Key;
 use transformrs::Message;
 use transformrs::Provider;
-use transformrs::SubContent;
 
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct";
 
@@ -34,6 +33,7 @@ async fn test_chat_completion_no_stream(
     messages: Vec<Message>,
     provider: Provider,
     model: &str,
+    expected: Option<&str>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).unwrap();
@@ -49,20 +49,29 @@ async fn test_chat_completion_no_stream(
     assert_eq!(resp.object, "chat.completion");
     assert_eq!(resp.choices.len(), 1);
     let content = resp.choices[0].message.content.clone();
-    assert_eq!(canonicalize_content(&content), "hello world");
+    if let Some(expected) = expected {
+        assert_eq!(canonicalize_content(&content), expected);
+    }
     Ok(())
+}
+
+async fn test_hello_chat_completion_no_stream(
+    provider: Provider,
+    model: &str,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    test_chat_completion_no_stream(hello_messages(), provider, model, Some("hello world")).await
 }
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_deepinfra() {
-    test_chat_completion_no_stream(hello_messages(), Provider::DeepInfra, MODEL)
+    test_hello_chat_completion_no_stream(Provider::DeepInfra, MODEL)
         .await
         .unwrap();
 }
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_deepinfra_error() {
-    let out = test_chat_completion_no_stream(hello_messages(), Provider::DeepInfra, "foo").await;
+    let out = test_hello_chat_completion_no_stream(Provider::DeepInfra, "foo").await;
     assert!(out.is_err());
     let err = out.unwrap_err();
     println!("{}", err);
@@ -71,14 +80,14 @@ async fn test_chat_completion_no_stream_deepinfra_error() {
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_hyperbolic() {
-    test_chat_completion_no_stream(hello_messages(), Provider::Hyperbolic, MODEL)
+    test_hello_chat_completion_no_stream(Provider::Hyperbolic, MODEL)
         .await
         .unwrap();
 }
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_hyperbolic_error() {
-    let out = test_chat_completion_no_stream(hello_messages(), Provider::Hyperbolic, "foo").await;
+    let out = test_hello_chat_completion_no_stream(Provider::Hyperbolic, "foo").await;
     assert!(out.is_err());
     let err = out.unwrap_err();
     println!("{}", err);
@@ -87,21 +96,21 @@ async fn test_chat_completion_no_stream_hyperbolic_error() {
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_google() {
-    test_chat_completion_no_stream(hello_messages(), Provider::Google, "gemini-1.5-flash")
+    test_hello_chat_completion_no_stream(Provider::Google, "gemini-1.5-flash")
         .await
         .unwrap();
 }
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_openai() {
-    test_chat_completion_no_stream(hello_messages(), Provider::OpenAI, "gpt-4o-mini")
+    test_hello_chat_completion_no_stream(Provider::OpenAI, "gpt-4o-mini")
         .await
         .unwrap();
 }
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_openai_error() {
-    let out = test_chat_completion_no_stream(hello_messages(), Provider::OpenAI, "foo").await;
+    let out = test_hello_chat_completion_no_stream(Provider::OpenAI, "foo").await;
     assert!(out.is_err());
     let err = out.unwrap_err();
     println!("{}", err);
@@ -110,13 +119,13 @@ async fn test_chat_completion_no_stream_openai_error() {
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_openai_image() {
-    let image_url = "https://commons.wikimedia.org/wiki/File:Groningen_Grote_Markt_3.jpg#/media/Bestand:Groningen_Grote_Markt_3.jpg";
+    let image_url = "https://transformrs.org/sunset.jpg";
     let messages = vec![
         Message::from_str("system", "You are a helpful assistant."),
         Message::from_str("user", "Describe this image in one sentence."),
         Message::from_image_url("user", image_url),
     ];
-    test_chat_completion_no_stream(messages, Provider::OpenAI, "gpt-4o-mini")
+    test_chat_completion_no_stream(messages, Provider::OpenAI, "gpt-4o-mini", None)
         .await
         .unwrap();
 }

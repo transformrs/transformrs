@@ -74,7 +74,7 @@ impl Provider {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub enum SubContent {
     TextContent { text: String },
     ImageUrlContent { image_url: String },
@@ -90,6 +90,26 @@ impl SubContent {
                 image_url: text.to_string(),
             },
             _ => panic!("Invalid subcontent type: {}", r#type),
+        }
+    }
+}
+
+impl Serialize for SubContent {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            SubContent::TextContent { text } => serializer.serialize_str(text),
+            SubContent::ImageUrlContent { image_url } => {
+                let json = serde_json::json!({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": image_url
+                    }
+                });
+                json.serialize(serializer)
+            }
         }
     }
 }
