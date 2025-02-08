@@ -62,6 +62,19 @@ async fn test_hello_chat_completion_no_stream(
     test_chat_completion_no_stream(hello_messages(), provider, model, Some("hello world")).await
 }
 
+async fn test_image_chat_completion_no_stream(
+    provider: Provider,
+    model: &str,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let image_url = "https://transformrs.org/sunset.jpg";
+    let messages = vec![
+        Message::from_str("system", "You are a helpful assistant."),
+        Message::from_str("user", "Describe this image in one sentence."),
+        Message::from_image_url("user", image_url),
+    ];
+    test_chat_completion_no_stream(messages, provider, model, None).await
+}
+
 #[tokio::test]
 async fn test_chat_completion_no_stream_deepinfra() {
     test_hello_chat_completion_no_stream(Provider::DeepInfra, MODEL)
@@ -76,6 +89,14 @@ async fn test_chat_completion_no_stream_deepinfra_error() {
     let err = out.unwrap_err();
     println!("{}", err);
     assert!(err.to_string().contains("does not exist"));
+}
+
+#[tokio::test]
+async fn test_chat_completion_no_stream_deepinfra_image() {
+    let model = "meta-llama/Llama-3.2-11B-Vision-Instruct";
+    test_image_chat_completion_no_stream(Provider::DeepInfra, model)
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
@@ -119,13 +140,7 @@ async fn test_chat_completion_no_stream_openai_error() {
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_openai_image() {
-    let image_url = "https://transformrs.org/sunset.jpg";
-    let messages = vec![
-        Message::from_str("system", "You are a helpful assistant."),
-        Message::from_str("user", "Describe this image in one sentence."),
-        Message::from_image_url("user", image_url),
-    ];
-    test_chat_completion_no_stream(messages, Provider::OpenAI, "gpt-4o-mini", None)
+    test_image_chat_completion_no_stream(Provider::OpenAI, "gpt-4o-mini")
         .await
         .unwrap();
 }
