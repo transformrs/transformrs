@@ -103,14 +103,14 @@ pub enum Content {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Message {
     pub role: String,
-    pub content: String,
+    pub content: Content,
 }
 
 impl Message {
-    pub fn new(role: &str, content: &str) -> Self {
+    pub fn from_str(role: &str, text: &str) -> Self {
         Self {
             role: role.to_string(),
-            content: content.to_string(),
+            content: Content::Text(text.to_string()),
         }
     }
 }

@@ -6,25 +6,35 @@ use transformrs::openai;
 use transformrs::Key;
 use transformrs::Message;
 use transformrs::Provider;
+use transformrs::Content;
 
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct";
 
-fn canonicalize_content(content: &str) -> String {
-    content
-        .to_lowercase()
+fn canonicalize_content(content: &Content) -> String {
+    match content {
+        Content::Text(text) => {
+            let lower = text.to_lowercase();
+            lower.trim().trim_end_matches('.')
+        },
+        Content::Collection(_) => panic!("Collection not supported"),
+    }.to_lowercase()
         .trim()
         .trim_end_matches('.')
         .to_string()
 }
 
+fn hello_messages() -> Vec<Message> {
+    vec![
+        Message::from_str("system", "You are a helpful assistant."),
+        Message::from_str("user", "This is a test. Please respond with 'hello world'."),
+    ]
+}
+
 async fn test_chat_completion_no_stream(
+    messages: Vec<Message>,
     provider: Provider,
     model: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let messages = vec![
-        Message::new("system", "You are a helpful assistant."),
-        Message::new("user", "This is a test. Please respond with 'hello world'."),
-    ];
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).unwrap();
     let messages = messages.clone();
@@ -45,14 +55,25 @@ async fn test_chat_completion_no_stream(
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_deepinfra() {
-    test_chat_completion_no_stream(Provider::DeepInfra, MODEL)
+    test_chat_completion_no_stream(hello_messages(), Provider::DeepInfra, MODEL)
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn test_chat_completion_no_stream_deepinfra_image() {
+    let messages = vec![
+        Message::from_str("system", "You are a helpful assistant."),
+        Message::from_str("user", "This is a test. Please respond with 'hello world'."),
+    ];
+    test_chat_completion_no_stream(messages, Provider::DeepInfra, MODEL)
         .await
         .unwrap();
 }
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_deepinfra_error() {
-    let out = test_chat_completion_no_stream(Provider::DeepInfra, "foo").await;
+    let out = test_chat_completion_no_stream(hello_messages(), Provider::DeepInfra, "foo").await;
     assert!(out.is_err());
     let err = out.unwrap_err();
     println!("{}", err);
@@ -61,14 +82,14 @@ async fn test_chat_completion_no_stream_deepinfra_error() {
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_hyperbolic() {
-    test_chat_completion_no_stream(Provider::Hyperbolic, MODEL)
+    test_chat_completion_no_stream(hello_messages(), Provider::Hyperbolic, MODEL)
         .await
         .unwrap();
 }
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_hyperbolic_error() {
-    let out = test_chat_completion_no_stream(Provider::Hyperbolic, "foo").await;
+    let out = test_chat_completion_no_stream(hello_messages(), Provider::Hyperbolic, "foo").await;
     assert!(out.is_err());
     let err = out.unwrap_err();
     println!("{}", err);
@@ -77,21 +98,21 @@ async fn test_chat_completion_no_stream_hyperbolic_error() {
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_google() {
-    test_chat_completion_no_stream(Provider::Google, "gemini-1.5-flash")
+    test_chat_completion_no_stream(hello_messages(), Provider::Google, "gemini-1.5-flash")
         .await
         .unwrap();
 }
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_openai() {
-    test_chat_completion_no_stream(Provider::OpenAI, "gpt-4o-mini")
+    test_chat_completion_no_stream(hello_messages(), Provider::OpenAI, "gpt-4o-mini")
         .await
         .unwrap();
 }
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_openai_error() {
-    let out = test_chat_completion_no_stream(Provider::OpenAI, "foo").await;
+    let out = test_chat_completion_no_stream(hello_messages(), Provider::OpenAI, "foo").await;
     assert!(out.is_err());
     let err = out.unwrap_err();
     println!("{}", err);
@@ -102,11 +123,7 @@ async fn chat_completion_stream_helper(
     key: &Key,
     model: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let messages = vec![
-        Message::new("system", "You are a helpful assistant."),
-        Message::new("user", "This is a test. Please respond with 'hello world'."),
-    ];
-
+    let messages =  hello_messages();
     let mut stream = openai::stream_chat_completion(&key, model, &messages)
         .await
         .unwrap();
