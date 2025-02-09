@@ -23,9 +23,10 @@ async fn test_tts_deepinfra() {
     let mut config = transformrs::text_to_speech::TTSConfig::default();
     config.preset_voice = Some("am_echo".to_string());
     let model = Some("hexgrad/Kokoro-82M");
-    let speech = tts_helper(&Provider::DeepInfra, &config, model).await.unwrap();
+    let provider = Provider::DeepInfra;
+    let speech = tts_helper(&provider, &config, model).await.unwrap();
     assert_eq!(speech.output_format, "mp3");
-    let bytes = speech.base64_decode().unwrap();
+    let bytes = speech.base64_decode(&provider).unwrap();
     assert!(bytes.len() > 0);
 
     // Can be used to manually verify the output.
@@ -37,9 +38,10 @@ async fn test_tts_deepinfra() {
 async fn test_tts_hyperbolic() {
     let config = transformrs::text_to_speech::TTSConfig::default();
     let model = None;
-    let speech = tts_helper(&Provider::Hyperbolic, &config, model).await.unwrap();
-    println!("{:?}", speech);
-    let bytes = speech.base64_decode().unwrap();
+    let provider = Provider::Hyperbolic;
+    let speech = tts_helper(&provider, &config, model).await.unwrap();
+    let mut file = File::create("tests/tmp").unwrap();
+    file.write_all(&speech.audio.to_string().as_bytes()).unwrap();
+    let bytes = speech.base64_decode(&provider).unwrap();
     assert!(bytes.len() > 0);
-    assert!(false);
 }

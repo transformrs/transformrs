@@ -40,7 +40,7 @@ fn address(key: &Key, model: Option<&str>) -> String {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Speech {
     pub request_id: Option<String>,
     pub output_format: String,
@@ -51,13 +51,19 @@ impl Speech {
     /// Convert the base64 encoded audio to bytes.
     ///
     /// These bytes can then, for example, be written to a file.
-    pub fn base64_decode(&self) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
-        let audio = self
-            .audio
-            .strip_prefix("data:audio/mp3;base64,")
-            .unwrap_or(&self.audio);
-        let bytes = BASE64_STANDARD.decode(audio).expect("no decode");
-        Ok(bytes)
+    pub fn base64_decode(&self, provider: &Provider) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
+        if provider == &Provider::Hyperbolic {
+            let audio = self.audio.strip_prefix('"').unwrap().strip_suffix('"').unwrap();
+            let bytes = BASE64_STANDARD.decode(audio).expect("no decode");
+            Ok(bytes)
+        } else {
+            let audio = self
+                .audio
+                .strip_prefix("data:audio/mp3;base64,")
+                .unwrap_or(&self.audio);
+            let bytes = BASE64_STANDARD.decode(audio).expect("no decode");
+            Ok(bytes)
+        }
     }
 }
 
