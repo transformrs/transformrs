@@ -4,20 +4,13 @@
 
 use crate::request_headers;
 use crate::Key;
-use crate::Provider;
 use reqwest;
 use serde::Deserialize;
 use serde_json::Value;
 use std::error::Error;
 
 fn address(key: &Key) -> String {
-    let base_url = match key.provider {
-        Provider::Groq => format!("{}/openai/v1", key.provider.domain()),
-        Provider::OpenAI => format!("{}/v1", key.provider.domain()),
-        Provider::Hyperbolic => format!("{}/v1", key.provider.domain()),
-        Provider::Google => format!("{}/v1beta/openai", key.provider.domain()),
-        _ => format!("{}/v1/openai", key.provider.domain()),
-    };
+    let base_url = crate::openai_base_url(key);
     format!("{}/models", base_url)
 }
 

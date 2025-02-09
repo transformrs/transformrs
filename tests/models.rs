@@ -15,6 +15,7 @@ async fn test_models(provider: Provider) -> Result<Models, Box<dyn Error + Send 
             return Err(e);
         }
     };
+    println!("{:?}", resp.raw());
     let resp = resp.structured();
     Ok(resp.unwrap())
 }
@@ -23,4 +24,10 @@ async fn test_models(provider: Provider) -> Result<Models, Box<dyn Error + Send 
 async fn test_models_groq() {
     let models = test_models(Provider::Groq).await.unwrap();
     assert!(models.contains("llama3-8b-8192"));
+}
+
+#[tokio::test]
+async fn test_models_openai() {
+    let models = test_models(Provider::OpenAI).await.unwrap();
+    assert!(models.contains("gpt-4o"));
 }
