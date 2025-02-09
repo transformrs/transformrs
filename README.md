@@ -10,7 +10,7 @@ I was looking into making a command line tool that could summarize PDF files.
 Then I noticed that I probably needed to use a cloud provider.
 However, then I would be requiring myself and users to use the same cloud provider.
 This library is avoids that.
-It provides the interface to multiple cloud providers, so that users can choose their favourite provider.
+It provides the interface to multiple cloud providers, so that users can pick their favourite.
 
 ## Cloud versus Local
 
