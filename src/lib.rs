@@ -1,3 +1,4 @@
+pub mod models;
 pub mod openai;
 pub mod text_to_image;
 pub mod text_to_speech;
@@ -23,6 +24,16 @@ pub(crate) fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn Error + Se
     Ok(headers)
 }
 
+pub(crate) fn openai_base_url(key: &Key) -> String {
+    match key.provider {
+        Provider::Groq => format!("{}/openai/v1", key.provider.domain()),
+        Provider::OpenAI => format!("{}/v1", key.provider.domain()),
+        Provider::Hyperbolic => format!("{}/v1", key.provider.domain()),
+        Provider::Google => format!("{}/v1beta/openai", key.provider.domain()),
+        _ => format!("{}/v1/openai", key.provider.domain()),
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Api {
     /// The OpenAI API. Most providers (partially) support this.
@@ -35,6 +46,7 @@ pub enum Api {
 pub enum Provider {
     Amazon,
     Azure,
+    Cerebras,
     DeepInfra,
     Fireworks,
     FriendliAI,
@@ -58,6 +70,7 @@ impl Provider {
         match self {
             Provider::Amazon => "https://api.amazon.com",
             Provider::Azure => "https://api.azure.com",
+            Provider::Cerebras => "https://api.cerebras.ai",
             Provider::DeepInfra => "https://api.deepinfra.com",
             Provider::Fireworks => "https://api.fireworks.ai",
             Provider::FriendliAI => "https://api.friendli.ai",
