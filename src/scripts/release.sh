@@ -51,13 +51,3 @@ else
     echo "Did not receive YES, aborting"
     exit 1
 fi
-
-I read about ingesting PDFs in Google Gemini here on HN last week [1]. This and some other thoughts that I had on AI [2] made me want to create a summarize PDF command line utility. Just point the utility to a PDF and get a summary back. However, I personally prefer to write CLI tools in Rust since those binaries are fast, small, and easy to distribute via `cargo install` (or `cargo binstall`). So that was a problem. I wanted to use a cloud provider since my system doesn't have enough RAM for most state-of-the-art models, but at the same time, I didn't want to require users of the tool to use the same API provider as me.
-
-That's why I created the `transformrs` Rust library [3]. The name is from "transform", which is essentially what AI models do, and "Rust". It is also a nudge to the transformers algorithm.
-
-[1]: https://news.ycombinator.com/item?id=42952605
-
-[2]: https://huijzer.xyz/posts/ai-learning-rate/
-
-[3]: https://github.com/transformrs/transformrs
