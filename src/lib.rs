@@ -1,3 +1,4 @@
+pub mod models;
 pub mod openai;
 pub mod text_to_image;
 pub mod text_to_speech;
