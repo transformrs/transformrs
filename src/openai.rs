@@ -13,24 +13,25 @@ use serde_json::Value;
 use std::error::Error;
 use std::pin::Pin;
 
-fn address(key: &Key) -> String {
-    let base_url = crate::openai_base_url(key);
+fn address(provider: &Provider) -> String {
+    let base_url = crate::openai_base_url(provider);
     format!("{}/chat/completions", base_url)
 }
 
 async fn request_chat_completion(
+    provider: &Provider,
     key: &Key,
     model: &str,
     stream: bool,
     messages: &[Message],
 ) -> Result<Response, Box<dyn Error + Send + Sync>> {
-    let address = address(key);
+    let address = address(provider);
     let body = serde_json::json!({
         "model": model,
         "messages": messages,
         "stream": stream,
     });
-    let client = if key.provider == Provider::Google {
+    let client = if provider == &Provider::Google {
         // Without this, the request will fail with 400 INVALID_ARGUMENT.
         // According to the docs, a 400 error is returned when the request body
         // is malformed.  Why rustls tls fixes this, I do not know.
@@ -139,12 +140,13 @@ impl ChatCompletionResponse {
 }
 
 pub async fn chat_completion(
+    provider: &Provider,
     key: &Key,
     model: &str,
     messages: &[Message],
 ) -> Result<ChatCompletionResponse, Box<dyn Error + Send + Sync>> {
     let stream = false;
-    let resp = request_chat_completion(key, model, stream, messages).await?;
+    let resp = request_chat_completion(provider, key, model, stream, messages).await?;
     let status = resp.status();
     let text = resp.text().await?;
     let chat_completion_response = ChatCompletionResponse {
@@ -216,11 +218,12 @@ fn process_line(line: &str, buffer: &mut String) -> Option<ChatCompletionChunk> 
 }
 
 pub async fn stream_chat_completion(
+    provider: &Provider,
     key: &Key,
     model: &str,
     messages: &[Message],
 ) -> Result<Pin<Box<dyn Stream<Item = ChatCompletionChunk> + Send>>, Box<dyn Error + Send + Sync>> {
-    let resp = request_chat_completion(key, model, true, messages).await?;
+    let resp = request_chat_completion(provider, key, model, true, messages).await?;
     let mut buffer = String::new();
     let stream = resp
         .bytes_stream()

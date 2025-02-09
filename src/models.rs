@@ -4,13 +4,14 @@
 
 use crate::request_headers;
 use crate::Key;
+use crate::Provider;
 use reqwest;
 use serde::Deserialize;
 use serde_json::Value;
 use std::error::Error;
 
-fn address(key: &Key) -> String {
-    let base_url = crate::openai_base_url(key);
+fn address(provider: &Provider) -> String {
+    let base_url = crate::openai_base_url(provider);
     format!("{}/models", base_url)
 }
 
@@ -49,8 +50,11 @@ impl ModelsResponse {
     }
 }
 
-pub async fn models(key: &Key) -> Result<ModelsResponse, Box<dyn Error + Send + Sync>> {
-    let address = address(key);
+pub async fn models(
+    provider: &Provider,
+    key: &Key,
+) -> Result<ModelsResponse, Box<dyn Error + Send + Sync>> {
+    let address = address(provider);
     let client = reqwest::Client::new();
     let resp = client
         .get(address)

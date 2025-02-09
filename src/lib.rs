@@ -24,13 +24,14 @@ pub(crate) fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn Error + Se
     Ok(headers)
 }
 
-pub(crate) fn openai_base_url(key: &Key) -> String {
-    match key.provider {
-        Provider::Groq => format!("{}/openai/v1", key.provider.domain()),
-        Provider::OpenAI => format!("{}/v1", key.provider.domain()),
-        Provider::Hyperbolic => format!("{}/v1", key.provider.domain()),
-        Provider::Google => format!("{}/v1beta/openai", key.provider.domain()),
-        _ => format!("{}/v1/openai", key.provider.domain()),
+pub(crate) fn openai_base_url(provider: &Provider) -> String {
+    match provider {
+        Provider::Groq => format!("{}/openai/v1", provider.domain()),
+        Provider::OpenAI => format!("{}/v1", provider.domain()),
+        Provider::Hyperbolic => format!("{}/v1", provider.domain()),
+        Provider::Google => format!("{}/v1beta/openai", provider.domain()),
+        Provider::Other(domain) => domain.clone(),
+        _ => format!("{}/v1/openai", provider.domain()),
     }
 }
 
@@ -56,7 +57,10 @@ pub enum Provider {
     Nebius,
     Novita,
     OpenAI,
-    TogetherAI,
+    /// Another OpenAI-compatible provider.
+    ///
+    /// For example, "https://api.deepinfra.com".
+    Other(String),
 }
 
 impl std::fmt::Display for Provider {
@@ -80,12 +84,15 @@ impl Provider {
             Provider::Nebius => "https://api.nebi.us",
             Provider::Novita => "https://api.novita.ai",
             Provider::OpenAI => "https://api.openai.com",
-            Provider::TogetherAI => "https://api.together.ai",
+            Provider::Other(domain) => domain,
         }
         .to_string()
     }
     pub fn key_name(&self) -> String {
-        self.to_string().to_uppercase() + "_KEY"
+        match self {
+            Provider::Other(_) => "OTHER_KEY".to_string(),
+            _ => self.to_string().to_uppercase() + "_KEY",
+        }
     }
 }
 
@@ -220,10 +227,14 @@ pub struct Keys {
 
 impl Keys {
     pub fn for_provider(&self, provider: &Provider) -> Option<Key> {
-        self.keys
-            .iter()
-            .find(|key| key.provider == *provider)
-            .cloned()
+        fn finder(provider: &Provider, key: &Key) -> bool {
+            match provider {
+                Provider::Other(_domain) => matches!(&key.provider, Provider::Other(_)),
+                _ => key.provider == *provider,
+            }
+        }
+
+        self.keys.iter().find(|key| finder(provider, key)).cloned()
     }
 }
 
@@ -264,7 +275,7 @@ pub fn load_keys(path: &str) -> Keys {
         Provider::Nebius,
         Provider::Novita,
         Provider::OpenAI,
-        Provider::TogetherAI,
+        Provider::Other("".to_string()),
     ];
     for provider in providers {
         if let Ok(key_value) = std::env::var(provider.key_name()) {

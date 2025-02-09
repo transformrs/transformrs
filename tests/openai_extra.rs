@@ -14,9 +14,10 @@ async fn test_chat_completion_stream_duration() {
         Message::from_str("system", "You are a helpful assistant."),
         Message::from_str("user", "Tell a joke about a car."),
     ];
+    let provider = Provider::DeepInfra;
     let keys = transformrs::load_keys(".env");
-    let key = keys.for_provider(&Provider::DeepInfra).unwrap();
-    let mut stream = openai::stream_chat_completion(&key, &MODEL, &messages)
+    let key = keys.for_provider(&provider).unwrap();
+    let mut stream = openai::stream_chat_completion(&provider, &key, &MODEL, &messages)
         .await
         .unwrap();
     let mut content = String::new();

@@ -8,7 +8,7 @@ use transformrs::Provider;
 async fn test_models(provider: Provider) -> Result<Models, Box<dyn Error + Send + Sync>> {
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).unwrap();
-    let resp = models(&key).await;
+    let resp = models(&provider, &key).await;
     let resp = match resp {
         Ok(resp) => resp,
         Err(e) => {

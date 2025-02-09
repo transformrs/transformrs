@@ -36,7 +36,7 @@ async fn test_chat_completion_no_stream(
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).unwrap();
     let messages = messages.clone();
-    let resp = openai::chat_completion(&key, model, &messages).await;
+    let resp = openai::chat_completion(&provider, &key, model, &messages).await;
     let resp = match resp {
         Ok(resp) => resp,
         Err(e) => {
@@ -189,12 +189,21 @@ async fn test_chat_completion_no_stream_openai_image() {
         .unwrap();
 }
 
+#[tokio::test]
+async fn test_chat_completion_no_stream_other() {
+    let provider = Provider::Other("https://api.deepinfra.com/v1/openai".to_string());
+    test_hello_chat_completion_no_stream(provider, MODEL)
+        .await
+        .unwrap();
+}
+
 async fn chat_completion_stream_helper(
+    provider: &Provider,
     key: &Key,
     model: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let messages = hello_messages();
-    let mut stream = openai::stream_chat_completion(&key, model, &messages)
+    let mut stream = openai::stream_chat_completion(provider, key, model, &messages)
         .await
         .unwrap();
     let mut content = String::new();
@@ -210,36 +219,44 @@ async fn chat_completion_stream_helper(
 
 #[tokio::test]
 async fn test_chat_completion_stream_deepinfra() {
+    let provider = Provider::DeepInfra;
     let key = transformrs::load_keys(".env")
-        .for_provider(&Provider::DeepInfra)
+        .for_provider(&provider)
         .unwrap();
-    chat_completion_stream_helper(&key, MODEL).await.unwrap();
+    chat_completion_stream_helper(&provider, &key, MODEL)
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
 async fn test_chat_completion_stream_google() {
+    let provider = Provider::Google;
     let key = transformrs::load_keys(".env")
-        .for_provider(&Provider::Google)
+        .for_provider(&provider)
         .unwrap();
-    chat_completion_stream_helper(&key, "gemini-1.5-flash")
+    chat_completion_stream_helper(&provider, &key, "gemini-1.5-flash")
         .await
         .unwrap();
 }
 
 #[tokio::test]
 async fn test_chat_completion_stream_hyperbolic() {
+    let provider = Provider::Hyperbolic;
     let key = transformrs::load_keys(".env")
-        .for_provider(&Provider::Hyperbolic)
+        .for_provider(&provider)
         .unwrap();
-    chat_completion_stream_helper(&key, MODEL).await.unwrap();
+    chat_completion_stream_helper(&provider, &key, MODEL)
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
 async fn test_chat_completion_stream_openai() {
+    let provider = Provider::OpenAI;
     let key = transformrs::load_keys(".env")
-        .for_provider(&Provider::OpenAI)
+        .for_provider(&provider)
         .unwrap();
-    chat_completion_stream_helper(&key, "gpt-4o-mini")
+    chat_completion_stream_helper(&provider, &key, "gpt-4o-mini")
         .await
         .unwrap();
 }
