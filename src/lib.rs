@@ -31,10 +31,11 @@ pub(crate) fn openai_base_url(provider: &Provider) -> String {
         Provider::Google => format!("{}/v1beta/openai", provider.domain()),
         Provider::Groq => format!("{}/openai/v1", provider.domain()),
         Provider::Hyperbolic => format!("{}/v1", provider.domain()),
+        Provider::Mistral => format!("{}/v1", provider.domain()),
         Provider::OpenAI => format!("{}/v1", provider.domain()),
         Provider::Other(domain) => domain.clone(),
-        Provider::TogetherAI => format!("{}/v1", provider.domain()),
         Provider::SambaNova => format!("{}/v1", provider.domain()),
+        Provider::TogetherAI => format!("{}/v1", provider.domain()),
         _ => format!("{}/v1/openai", provider.domain()),
     }
 }
@@ -59,6 +60,7 @@ pub enum Provider {
     Google,
     Groq,
     Hyperbolic,
+    Mistral,
     Nebius,
     Novita,
     OpenAI,
@@ -88,6 +90,7 @@ impl Provider {
             Provider::Google => "https://generativelanguage.googleapis.com",
             Provider::Groq => "https://api.groq.com",
             Provider::Hyperbolic => "https://api.hyperbolic.xyz",
+            Provider::Mistral => "https://api.mistral.ai",
             Provider::Nebius => "https://api.nebi.us",
             Provider::Novita => "https://api.novita.ai",
             Provider::OpenAI => "https://api.openai.com",
