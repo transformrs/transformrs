@@ -46,7 +46,7 @@ pub enum Api {
 }
 
 #[allow(rustdoc::bare_urls)]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Serialize, PartialEq)]
 pub enum Provider {
     Amazon,
     Azure,

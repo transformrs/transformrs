@@ -5,12 +5,13 @@ use transformrs::Provider;
 #[tokio::main]
 async fn main() {
     let keys = transformrs::load_keys(".env");
-    let key = keys.for_provider(&Provider::DeepInfra).unwrap();
+    let provider = Provider::DeepInfra;
+    let key = keys.for_provider(&provider).unwrap();
     let mut config = transformrs::text_to_speech::TTSConfig::default();
     config.preset_voice = Some("am_echo".to_string());
     let msg = "Hello, world! This is a test of the TTS API.";
-    let model = "hexgrad/Kokoro-82M".to_string();
-    let resp = transformrs::text_to_speech::tts(&key, config, &model, msg)
+    let model = Some("hexgrad/Kokoro-82M");
+    let resp = transformrs::text_to_speech::tts(&key, &config, model, msg)
         .await
         .unwrap()
         .structured()
