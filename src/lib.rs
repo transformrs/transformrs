@@ -1,3 +1,5 @@
+//! Transformrs is a Rust library for interacting with various AI APIs.
+
 pub mod models;
 pub mod openai;
 pub mod text_to_image;
@@ -43,6 +45,7 @@ pub enum Api {
     DeepInfra,
 }
 
+#[allow(rustdoc::bare_urls)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum Provider {
     Amazon,
@@ -59,7 +62,7 @@ pub enum Provider {
     OpenAI,
     /// Another OpenAI-compatible provider.
     ///
-    /// For example, "https://api.deepinfra.com".
+    /// For example, "https://api.deepinfra.com/v1/openai".
     Other(String),
 }
 
