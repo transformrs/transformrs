@@ -16,6 +16,7 @@ fn canonicalize_content(content: &Content) -> String {
         .to_lowercase()
         .trim()
         .trim_end_matches('.')
+        .trim_end_matches('!')
         .to_string()
 }
 
@@ -79,7 +80,6 @@ async fn test_image_chat_completion_no_stream(
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let image = include_bytes!("sunset.jpg");
     let messages = vec![
-        Message::from_str("system", "You are a helpful assistant."),
         Message::from_str("user", "Describe this image in one sentence."),
         Message::from_image_bytes("user", "jpeg", image),
     ];
@@ -114,6 +114,22 @@ async fn test_chat_completion_no_stream_deepinfra_image() {
 async fn test_chat_completion_no_stream_deepinfra_image_base64() {
     let model = "meta-llama/Llama-3.2-11B-Vision-Instruct";
     test_image_chat_completion_no_stream(Provider::DeepInfra, model)
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn test_chat_completion_no_stream_groq() {
+    let model = "llama3-70b-8192";
+    test_hello_chat_completion_no_stream(Provider::Groq, model)
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn test_chat_completion_no_stream_groq_image() {
+    let model = "llama-3.2-11b-vision-preview";
+    test_image_chat_completion_no_stream(Provider::Groq, model)
         .await
         .unwrap();
 }

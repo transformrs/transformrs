@@ -14,12 +14,14 @@ use std::error::Error;
 use std::pin::Pin;
 
 fn address(key: &Key) -> String {
-    match key.provider {
-        Provider::OpenAI => format!("{}/v1/chat/completions", key.provider.domain()),
-        Provider::Hyperbolic => format!("{}/v1/chat/completions", key.provider.domain()),
-        Provider::Google => format!("{}/v1beta/openai/chat/completions", key.provider.domain()),
-        _ => format!("{}/v1/openai/chat/completions", key.provider.domain()),
-    }
+    let base_url = match key.provider {
+        Provider::Groq => format!("{}/openai/v1", key.provider.domain()),
+        Provider::OpenAI => format!("{}/v1", key.provider.domain()),
+        Provider::Hyperbolic => format!("{}/v1", key.provider.domain()),
+        Provider::Google => format!("{}/v1beta/openai", key.provider.domain()),
+        _ => format!("{}/v1/openai", key.provider.domain()),
+    };
+    format!("{}/chat/completions", base_url)
 }
 
 async fn request_chat_completion(
