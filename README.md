@@ -2,7 +2,7 @@
 
 transformrs is an interface for AI API providers.
 
-For examples, see <https://transformrs.org>.
+For examples, see [`examples/`](https://github.com/transformrs/transformrs/tree/main/examples).
 
 ## Why was this Project Created?
 
