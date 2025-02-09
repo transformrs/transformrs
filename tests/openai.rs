@@ -135,6 +135,15 @@ async fn test_chat_completion_no_stream_groq_image() {
 }
 
 #[tokio::test]
+async fn test_chat_completion_no_stream_groq_error() {
+    let out = test_hello_chat_completion_no_stream(Provider::Groq, "foo").await;
+    assert!(out.is_err());
+    let err = out.unwrap_err();
+    println!("{}", err);
+    assert!(err.to_string().contains("does not exist"));
+}
+
+#[tokio::test]
 async fn test_chat_completion_no_stream_hyperbolic() {
     test_hello_chat_completion_no_stream(Provider::Hyperbolic, MODEL)
         .await
