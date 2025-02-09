@@ -10,7 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Add Hyperbolic text to speech ([#12](https://github.com/rikhuijzer/transformrs/pull/12)).
-- Add `examples/` directory.
+- Add `examples/`.
+- Support arbitrary providers via `Provider::Other(base_url)`.
+- Add models interface to request models from a provider.
+- Add support for Groq.
+- Implement `Display` for `Content`.
 
 ## [0.3.0] - 2025-02-08
 

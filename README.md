@@ -1,6 +1,6 @@
 # transformrs
 
-transformrs is an interface for AI API providers, such as OpenAI, DeepInfra, and Hyperbolic.
+transformrs is an interface for AI API providers.
 
 For examples, see [`examples/`](https://github.com/transformrs/transformrs/tree/main/examples).
 
@@ -16,7 +16,7 @@ Other** | x
 SambaNova | x |
 TogetherAI | x |
 
-\*Chat supports streaming as well as image input.
+\*Chat supports streaming and image input.
 
 \*\*Other OpenAI-compatible providers can be used via `Provider::Other(base_url)`.
 
