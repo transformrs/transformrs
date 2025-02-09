@@ -34,7 +34,7 @@ async fn test_chat_completion_no_stream(
     expected: Option<&str>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let keys = transformrs::load_keys(".env");
-    let key = keys.for_provider(&provider).unwrap();
+    let key = keys.for_provider(&provider).expect("no key found");
     let messages = messages.clone();
     let resp = openai::chat_completion(&provider, &key, model, &messages).await;
     let resp = match resp {
