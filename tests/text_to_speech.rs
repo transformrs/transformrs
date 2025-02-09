@@ -1,17 +1,21 @@
 extern crate transformrs;
 
+use std::error::Error;
 use std::fs::File;
 use std::io::Write;
-use transformrs::Provider;
-use transformrs::text_to_speech::TTSConfig;
-use std::error::Error;
 use transformrs::text_to_speech::Speech;
+use transformrs::text_to_speech::TTSConfig;
+use transformrs::Provider;
 
-async fn tts_helper(provider: &Provider, config: &TTSConfig, model: Option<&str>) -> Result<Speech, Box<dyn Error + Send + Sync>> {
+async fn tts_helper(
+    provider: &Provider,
+    config: &TTSConfig,
+    model: Option<&str>,
+) -> Result<Speech, Box<dyn Error + Send + Sync>> {
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).unwrap();
     let msg = "Hello, world!";
-let resp = transformrs::text_to_speech::tts(&key, config, model, msg)
+    let resp = transformrs::text_to_speech::tts(&key, config, model, msg)
         .await
         .unwrap();
     let resp = resp.structured().unwrap();
@@ -26,11 +30,11 @@ async fn test_tts_deepinfra() {
     let provider = Provider::DeepInfra;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
     assert_eq!(speech.output_format, "mp3");
-    let bytes = speech.base64_decode(&provider).unwrap();
+    let bytes = speech.base64_decode().unwrap();
     assert!(bytes.len() > 0);
 
     // Can be used to manually verify the output.
-    let mut file = File::create("tests/tmp.mp3").unwrap();
+    let mut file = File::create("tests/tmp-deepinfra.mp3").unwrap();
     file.write_all(&bytes).unwrap();
 }
 
@@ -41,7 +45,12 @@ async fn test_tts_hyperbolic() {
     let provider = Provider::Hyperbolic;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
     let mut file = File::create("tests/tmp").unwrap();
-    file.write_all(&speech.audio.to_string().as_bytes()).unwrap();
-    let bytes = speech.base64_decode(&provider).unwrap();
+    file.write_all(&speech.audio.to_string().as_bytes())
+        .unwrap();
+    let bytes = speech.base64_decode().unwrap();
     assert!(bytes.len() > 0);
+
+    // Can be used to manually verify the output.
+    let mut file = File::create("tests/tmp-hyperbolic.mp3").unwrap();
+    file.write_all(&bytes).unwrap();
 }

@@ -51,19 +51,15 @@ impl Speech {
     /// Convert the base64 encoded audio to bytes.
     ///
     /// These bytes can then, for example, be written to a file.
-    pub fn base64_decode(&self, provider: &Provider) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
-        if provider == &Provider::Hyperbolic {
-            let audio = self.audio.strip_prefix('"').unwrap().strip_suffix('"').unwrap();
-            let bytes = BASE64_STANDARD.decode(audio).expect("no decode");
-            Ok(bytes)
-        } else {
-            let audio = self
-                .audio
-                .strip_prefix("data:audio/mp3;base64,")
-                .unwrap_or(&self.audio);
-            let bytes = BASE64_STANDARD.decode(audio).expect("no decode");
-            Ok(bytes)
-        }
+    pub fn base64_decode(&self) -> Result<Vec<u8>, Box<dyn Error + Send + Sync>> {
+        let deepinfra_prefix = "data:audio/mp3;base64,";
+        let audio = &self.audio;
+        let audio = self.audio.strip_prefix(deepinfra_prefix).unwrap_or(audio);
+        let hyperbolic_prefix = '"';
+        let audio = audio.strip_prefix(hyperbolic_prefix).unwrap_or(audio);
+        let audio = audio.strip_suffix(hyperbolic_prefix).unwrap_or(audio);
+        let bytes = BASE64_STANDARD.decode(audio).expect("no decode");
+        Ok(bytes)
     }
 }
 

@@ -16,7 +16,7 @@ async fn main() {
         .unwrap()
         .structured()
         .unwrap();
-    let bytes = resp.base64_decode(&provider).unwrap();
+    let bytes = resp.base64_decode().unwrap();
     let ext = resp.output_format;
     let mut file = File::create(format!("test.{ext}")).unwrap();
     file.write_all(&bytes).unwrap();
