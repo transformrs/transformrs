@@ -26,13 +26,18 @@ jobs:
       # Compile, but don't run.
       - run: cargo test --no-run
 
-      - run: cargo test --all-features
+      - run: |
+          cargo test --all-features
+
+          cargo run --example chat
+          cargo run --example image-chat
         env:
           DEEPINFRA_KEY: ${{ secrets.DEEPINFRA_KEY }}
           GOOGLE_KEY: ${{ secrets.GOOGLE_KEY }}
           GROQ_KEY: ${{ secrets.GROQ_KEY }}
           HYPERBOLIC_KEY: ${{ secrets.HYPERBOLIC_KEY }}
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          OTHER_KEY: ${{ secrets.DEEPINFRA_KEY }}
 
       - run: RUSTDOCFLAGS="-D warnings" cargo doc
 
