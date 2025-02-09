@@ -28,11 +28,13 @@ pub(crate) fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn Error + Se
 
 pub(crate) fn openai_base_url(provider: &Provider) -> String {
     match provider {
-        Provider::Groq => format!("{}/openai/v1", provider.domain()),
-        Provider::OpenAI => format!("{}/v1", provider.domain()),
-        Provider::Hyperbolic => format!("{}/v1", provider.domain()),
         Provider::Google => format!("{}/v1beta/openai", provider.domain()),
+        Provider::Groq => format!("{}/openai/v1", provider.domain()),
+        Provider::Hyperbolic => format!("{}/v1", provider.domain()),
+        Provider::OpenAI => format!("{}/v1", provider.domain()),
         Provider::Other(domain) => domain.clone(),
+        Provider::TogetherAI => format!("{}/v1", provider.domain()),
+        Provider::SambaNova => format!("{}/v1", provider.domain()),
         _ => format!("{}/v1/openai", provider.domain()),
     }
 }
@@ -64,6 +66,8 @@ pub enum Provider {
     ///
     /// For example, "https://api.deepinfra.com/v1/openai".
     Other(String),
+    SambaNova,
+    TogetherAI,
 }
 
 impl std::fmt::Display for Provider {
@@ -87,7 +91,9 @@ impl Provider {
             Provider::Nebius => "https://api.nebi.us",
             Provider::Novita => "https://api.novita.ai",
             Provider::OpenAI => "https://api.openai.com",
-            Provider::Other(domain) => domain,
+            Provider::Other(base_url) => base_url,
+            Provider::SambaNova => "https://api.sambanova.ai",
+            Provider::TogetherAI => "https://api.together.xyz",
         }
         .to_string()
     }
