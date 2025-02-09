@@ -1,5 +1,3 @@
-extern crate transformrs;
-
 use transformrs::openai;
 use transformrs::Message;
 use transformrs::Provider;

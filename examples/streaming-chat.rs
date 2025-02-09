@@ -1,3 +1,4 @@
+use futures_util::stream::StreamExt;
 use transformrs::openai;
 use transformrs::Message;
 use transformrs::Provider;
@@ -13,13 +14,17 @@ async fn main() {
     let key = keys.for_provider(&provider).unwrap();
     let model = "meta-llama/Llama-3.3-70B-Instruct";
     // Using the OpenAI-compatible API.
-    let resp = openai::chat_completion(&provider, &key, model, &messages)
+    let mut stream = openai::stream_chat_completion(&provider, &key, model, &messages)
         .await
-        .unwrap()
-        .structured()
         .unwrap();
-    println!("{}", resp.choices[0].message.content);
+    while let Some(resp) = stream.next().await {
+        println!(
+            "{}",
+            resp.choices[0].delta.content.clone().unwrap_or_default()
+        );
+    }
 }
 
 // output:
-// hello world
+// hello
+//  world

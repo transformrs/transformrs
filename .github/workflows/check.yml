@@ -31,6 +31,9 @@ jobs:
 
           cargo run --example chat
           cargo run --example image-chat
+          cargo run --example streaming-chat
+          cargo run --example text-to-image
+          cargo run --example text-to-speech
         env:
           DEEPINFRA_KEY: ${{ secrets.DEEPINFRA_KEY }}
           GOOGLE_KEY: ${{ secrets.GOOGLE_KEY }}
