@@ -26,7 +26,11 @@ jobs:
       # Compile, but don't run.
       - run: cargo test --no-run
 
-      - run: cargo test --all-features
+      - run: |
+          cargo test --all-features
+
+          cargo run --example chat
+          cargo run --example image-chat
         env:
           DEEPINFRA_KEY: ${{ secrets.DEEPINFRA_KEY }}
           GOOGLE_KEY: ${{ secrets.GOOGLE_KEY }}
