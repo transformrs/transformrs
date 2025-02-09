@@ -122,6 +122,17 @@ pub enum Content {
     Collection(Vec<SubContent>),
 }
 
+impl std::fmt::Display for Content {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Content::Text(text) => write!(f, "{}", text),
+            Content::Collection(items) => {
+                write!(f, "{items:?}")
+            }
+        }
+    }
+}
+
 impl Serialize for Content {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

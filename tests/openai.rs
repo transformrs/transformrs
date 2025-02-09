@@ -11,15 +11,12 @@ use transformrs::Provider;
 const MODEL: &str = "meta-llama/Llama-3.3-70B-Instruct";
 
 fn canonicalize_content(content: &Content) -> String {
-    match content {
-        Content::Text(text) => text
-            .to_string()
-            .to_lowercase()
-            .trim()
-            .trim_end_matches('.')
-            .to_string(),
-        Content::Collection(_) => panic!("Collection not supported"),
-    }
+    content
+        .to_string()
+        .to_lowercase()
+        .trim()
+        .trim_end_matches('.')
+        .to_string()
 }
 
 fn hello_messages() -> Vec<Message> {
