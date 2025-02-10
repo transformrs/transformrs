@@ -8,7 +8,7 @@ async fn main() {
     let provider = Provider::DeepInfra;
     let key = keys.for_provider(&provider).unwrap();
     let mut config = transformrs::text_to_speech::TTSConfig::default();
-    config.preset_voice = Some("am_echo".to_string());
+    config.voice = Some("am_echo".to_string());
     let msg = "Hello, world! This is a test of the TTS API.";
     let model = Some("hexgrad/Kokoro-82M");
     let resp = transformrs::text_to_speech::tts(&key, &config, model, msg)
@@ -16,8 +16,8 @@ async fn main() {
         .unwrap()
         .structured()
         .unwrap();
-    let bytes = resp.base64_decode().unwrap();
-    let ext = resp.output_format;
+    let bytes = resp.audio.clone();
+    let ext = resp.file_format;
     let mut file = File::create(format!("test.{ext}")).unwrap();
     file.write_all(&bytes).unwrap();
 }

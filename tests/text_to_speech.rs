@@ -25,12 +25,12 @@ async fn tts_helper(
 #[tokio::test]
 async fn test_tts_deepinfra() {
     let mut config = transformrs::text_to_speech::TTSConfig::default();
-    config.preset_voice = Some("am_echo".to_string());
+    config.voice = Some("am_echo".to_string());
     let model = Some("hexgrad/Kokoro-82M");
     let provider = Provider::DeepInfra;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
-    assert_eq!(speech.output_format, "mp3");
-    let bytes = speech.base64_decode().unwrap();
+    assert_eq!(speech.file_format, "mp3");
+    let bytes = speech.audio.clone();
     assert!(bytes.len() > 0);
 
     // Can be used to manually verify the output.
@@ -45,12 +45,22 @@ async fn test_tts_hyperbolic() {
     let provider = Provider::Hyperbolic;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
     let mut file = File::create("tests/tmp").unwrap();
-    file.write_all(&speech.audio.to_string().as_bytes())
-        .unwrap();
-    let bytes = speech.base64_decode().unwrap();
+    file.write_all(&speech.audio.clone()).unwrap();
+    let bytes = speech.audio.clone();
     assert!(bytes.len() > 0);
 
     // Can be used to manually verify the output.
     let mut file = File::create("tests/tmp-hyperbolic.mp3").unwrap();
     file.write_all(&bytes).unwrap();
+}
+
+#[tokio::test]
+async fn test_tts_openai() {
+    let mut config = transformrs::text_to_speech::TTSConfig::default();
+    config.voice = Some("alloy".to_string());
+    let model = Some("tts-1");
+    let provider = Provider::OpenAI;
+    let speech = tts_helper(&provider, &config, model).await.unwrap();
+    let mut file = File::create("tests/tmp-openai.mp3").unwrap();
+    file.write_all(&speech.audio.clone()).unwrap();
 }

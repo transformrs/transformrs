@@ -11,7 +11,7 @@ DeepInfra | x | x | x
 Google | x |
 Groq | x |
 Hyperbolic | x | x | x
-OpenAI | x |
+OpenAI | x | | x
 Other** | x
 SambaNova | x |
 TogetherAI | x |
