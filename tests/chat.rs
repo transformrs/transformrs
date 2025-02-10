@@ -2,7 +2,7 @@ extern crate transformrs;
 
 use futures_util::stream::StreamExt;
 use std::error::Error;
-use transformrs::openai;
+use transformrs::chat;
 use transformrs::Content;
 use transformrs::Key;
 use transformrs::Message;
@@ -36,7 +36,7 @@ async fn test_chat_completion_no_stream(
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).expect("no key found");
     let messages = messages.clone();
-    let resp = openai::chat_completion(&provider, &key, model, &messages).await;
+    let resp = chat::chat_completion(&provider, &key, model, &messages).await;
     let resp = match resp {
         Ok(resp) => resp,
         Err(e) => {
@@ -203,7 +203,7 @@ async fn chat_completion_stream_helper(
     model: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let messages = hello_messages();
-    let mut stream = openai::stream_chat_completion(provider, key, model, &messages)
+    let mut stream = chat::stream_chat_completion(provider, key, model, &messages)
         .await
         .unwrap();
     let mut content = String::new();

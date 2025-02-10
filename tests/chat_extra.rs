@@ -1,7 +1,7 @@
 extern crate transformrs;
 
 use futures_util::stream::StreamExt;
-use transformrs::openai;
+use transformrs::chat;
 use transformrs::Message;
 use transformrs::Provider;
 
@@ -17,7 +17,7 @@ async fn test_chat_completion_stream_duration() {
     let provider = Provider::DeepInfra;
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).unwrap();
-    let mut stream = openai::stream_chat_completion(&provider, &key, &MODEL, &messages)
+    let mut stream = chat::stream_chat_completion(&provider, &key, &MODEL, &messages)
         .await
         .unwrap();
     let mut content = String::new();

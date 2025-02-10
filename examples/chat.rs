@@ -1,4 +1,4 @@
-use transformrs::openai;
+use transformrs::chat;
 use transformrs::Message;
 use transformrs::Provider;
 
@@ -12,8 +12,7 @@ async fn main() {
     let provider = Provider::DeepInfra;
     let key = keys.for_provider(&provider).unwrap();
     let model = "meta-llama/Llama-3.3-70B-Instruct";
-    // Using the OpenAI-compatible API.
-    let resp = openai::chat_completion(&provider, &key, model, &messages)
+    let resp = chat::chat_completion(&provider, &key, model, &messages)
         .await
         .unwrap()
         .structured()

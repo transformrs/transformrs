@@ -1,5 +1,5 @@
 use futures_util::stream::StreamExt;
-use transformrs::openai;
+use transformrs::chat;
 use transformrs::Message;
 use transformrs::Provider;
 
@@ -13,8 +13,7 @@ async fn main() {
     let provider = Provider::DeepInfra;
     let key = keys.for_provider(&provider).unwrap();
     let model = "meta-llama/Llama-3.3-70B-Instruct";
-    // Using the OpenAI-compatible API.
-    let mut stream = openai::stream_chat_completion(&provider, &key, model, &messages)
+    let mut stream = chat::stream_chat_completion(&provider, &key, model, &messages)
         .await
         .unwrap();
     while let Some(resp) = stream.next().await {

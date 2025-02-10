@@ -7,7 +7,7 @@ use transformrs::text_to_image::Image;
 use transformrs::Provider;
 
 #[tokio::test]
-async fn test_text_to_image() {
+async fn test_text_to_image_hyperbolic() {
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&Provider::Hyperbolic).expect("no key");
     let mut config = transformrs::text_to_image::TTIConfig::default();
