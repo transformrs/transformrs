@@ -40,14 +40,6 @@ pub(crate) fn openai_base_url(provider: &Provider) -> String {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum Api {
-    /// The OpenAI API. Most providers (partially) support this.
-    OpenAI,
-    /// The DeepInfra API. This is their non-OpenAI-compatible API.
-    DeepInfra,
-}
-
 #[allow(rustdoc::bare_urls)]
 #[derive(Clone, Debug, Serialize, PartialEq)]
 pub enum Provider {
