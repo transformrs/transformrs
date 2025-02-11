@@ -56,7 +56,7 @@ impl Speech {
     ) -> Result<Bytes, Box<dyn Error + Send + Sync>> {
         let stripped = if provider == &Provider::DeepInfra {
             let deepinfra_prefix = "data:audio/mp3;base64,";
-            audio.strip_prefix(deepinfra_prefix).unwrap()
+            audio.strip_prefix(deepinfra_prefix).expect("no mp3 prefix")
         } else {
             audio
         };
@@ -125,6 +125,7 @@ pub async fn tts(
     model: Option<&str>,
     text: &str,
 ) -> Result<SpeechResponse, Box<dyn Error + Send + Sync>> {
+    println!("config: {:?}", config);
     let address = address(key, model);
     let mut body = json!({});
     if key.provider == Provider::OpenAI {
