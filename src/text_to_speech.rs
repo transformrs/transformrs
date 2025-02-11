@@ -5,13 +5,13 @@
 use crate::request_headers;
 use crate::Key;
 use crate::Provider;
-use serde_json::json;
-use serde_json::Value;
 use base64::prelude::*;
 use bytes::Bytes;
 use reqwest;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_json::json;
+use serde_json::Value;
 use std::error::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -69,6 +69,8 @@ impl Speech {
             let deepinfra_prefix = "data:audio/mp3;base64,";
             audio.strip_prefix(deepinfra_prefix).unwrap()
         } else if provider == &Provider::Hyperbolic {
+            audio
+        } else if provider == &Provider::Google {
             audio
         } else {
             panic!("Unsupported TTS provider: {}", provider);
