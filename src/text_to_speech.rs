@@ -139,9 +139,6 @@ pub async fn tts(
     if let Some(model) = &model {
         body["model"] = Value::String(model.to_string());
     }
-    if let Some(output_format) = &config.output_format {
-        body["output_format"] = Value::String(output_format.clone());
-    }
     if let Some(voice) = &config.voice {
         if key.provider == Provider::OpenAI {
             body["voice"] = Value::String(voice.clone());
@@ -165,6 +162,9 @@ pub async fn tts(
     }
     if let Some(speed) = config.speed {
         body["speed"] = Value::from(speed);
+    }
+    if let Some(output_format) = &config.output_format {
+        body["output_format"] = Value::String(output_format.clone());
     }
     let headers = if key.provider == Provider::Google {
         let mut headers = request_headers(key)?;
