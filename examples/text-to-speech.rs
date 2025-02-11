@@ -19,6 +19,6 @@ async fn main() {
         .unwrap();
     let bytes = resp.audio.clone();
     let ext = resp.file_format;
-    let mut file = File::create(format!("test.{ext}")).unwrap();
+    let mut file = File::create(format!("example.{ext}")).unwrap();
     file.write_all(&bytes).unwrap();
 }
