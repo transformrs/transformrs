@@ -9,6 +9,7 @@ async fn main() {
     let key = keys.for_provider(&provider).unwrap();
     let mut config = transformrs::text_to_speech::TTSConfig::default();
     config.voice = Some("am_echo".to_string());
+    config.output_format = Some("mp3".to_string());
     let msg = "Hello, world! This is a test of the TTS API.";
     let model = Some("hexgrad/Kokoro-82M");
     let resp = transformrs::text_to_speech::tts(&key, &config, model, msg)
