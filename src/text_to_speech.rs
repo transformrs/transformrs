@@ -166,6 +166,11 @@ pub async fn tts(
             if let Some(language_code) = &config.language_code {
                 body["voice"]["languageCode"] = Value::String(language_code.clone());
             }
+            body["audioConfig"] = json!({
+                "audioEncoding": "LINEAR16",
+                "pitch": 0,
+                "speakingRate": 1
+            });
         } else {
             body["preset_voice"] = Value::String(voice.clone());
         }
