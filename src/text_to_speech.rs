@@ -125,7 +125,6 @@ pub async fn tts(
     model: Option<&str>,
     text: &str,
 ) -> Result<SpeechResponse, Box<dyn Error + Send + Sync>> {
-    println!("config: {:?}", config);
     let address = address(key, model);
     let mut body = json!({});
     if key.provider == Provider::OpenAI {
@@ -167,7 +166,6 @@ pub async fn tts(
     if let Some(speed) = config.speed {
         body["speed"] = Value::from(speed);
     }
-    println!("body: {:?}", body);
     let headers = if key.provider == Provider::Google {
         let mut headers = request_headers(key)?;
         headers.remove("Authorization");

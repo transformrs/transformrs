@@ -37,8 +37,6 @@ async fn test_tts_deepinfra() {
     // Can be used to manually verify the output.
     let mut file = File::create("tests/tmp-deepinfra.mp3").unwrap();
     file.write_all(&bytes).unwrap();
-
-    assert!(false);
 }
 
 #[tokio::test]
