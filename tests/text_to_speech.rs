@@ -68,10 +68,10 @@ async fn test_tts_openai() {
 #[tokio::test]
 async fn test_tts_google() {
     let mut config = transformrs::text_to_speech::TTSConfig::default();
-    config.voice = Some("alloy".to_string());
-    let model = Some("tts-1");
-    let provider = Provider::OpenAI;
+    config.voice = Some("en-US-Studio-Q".to_string());
+    let model = None;
+    let provider = Provider::Google;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
-    let mut file = File::create("tests/tmp-openai.mp3").unwrap();
+    let mut file = File::create("tests/tmp-google.mp3").unwrap();
     file.write_all(&speech.audio.clone()).unwrap();
 }

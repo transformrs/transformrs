@@ -38,6 +38,10 @@ fn address(key: &Key, model: Option<&str>) -> String {
         format!("{}/v1/audio/generation", key.provider.domain())
     } else if key.provider == Provider::OpenAI {
         format!("{}/v1/audio/speech", key.provider.domain())
+    } else if key.provider == Provider::Google {
+        let domain = "https://texttospeech.googleapis.com";
+        let path = "/v1beta1/text:synthesize";
+        format!("{domain}{path}?key={}", key.key)
     } else {
         panic!("Unsupported TTS provider: {}", key.provider);
     }
@@ -107,6 +111,19 @@ impl SpeechResponse {
                 audio: self.resp.clone(),
             };
             Ok(out)
+        } else if self.provider == Provider::Google {
+            let resp = serde_json::from_slice::<Value>(&self.resp).unwrap();
+            if resp.get("error").is_some() {
+                panic!("Google returned an error: {}", resp["error"]);
+            }
+            let audio = &resp["audioContent"].as_str().expect("audioContent");
+            let _timepoints = &resp["timepoints"].as_array().unwrap();
+            let out = Speech {
+                request_id: None,
+                file_format: "mp3".to_string(),
+                audio: Speech::base64_decode(audio, &self.provider)?,
+            };
+            Ok(out)
         } else {
             panic!("Unsupported TTS provider: {}", self.provider);
         }
@@ -123,6 +140,10 @@ pub async fn tts(
     let mut body = serde_json::json!({});
     if key.provider == Provider::OpenAI {
         body["input"] = serde_json::Value::String(text.to_string());
+    } else if key.provider == Provider::Google {
+        body["input"] = serde_json::json!({
+            "text": text.to_string()
+        });
     } else {
         body["text"] = serde_json::Value::String(text.to_string());
     }

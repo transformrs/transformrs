@@ -57,7 +57,7 @@ What I hope is that we will see many more "core utilities" like `cat`, `ls`, and
 As pointed out above, it is unlikely that these utilities will run the models locally.
 Instead, it's more likely that they will be built on top of the cloud providers.
 One example of this is [llm](https://github.com/simonw/llm) by Simon Willison.
-Examples I'd like to see are PDF summarizers, PDF to text, and more.
+Examples I'd looking forward to are PDF summarizers, PDF to text, text to speech, and more.
 
 ## Why the name transformrs?
 
@@ -66,7 +66,7 @@ It's also a play on the word "transformers" which is an important algorithm in A
 
 ## Google Cloud API
 
-This is a difficult one to get working.
+This is a difficult one to get the key working.
 On the Cloud Text-to-Speech API page, click to enable the API.
 In the API key page (API & Services -> Credentials), ensure that the key has access (is restricted to) the Cloud Text-to-Speech API (for text to speech) and the Generative Language API (for chat completions).
 
@@ -74,3 +74,5 @@ This is using the "old" Cloud Text-to-Speech API instead of the "new" Gemini 2.0
 Gemini 2.0 can do higher quality text to speech, but it currently seems not very stable yet.
 It for example doesn't follow the prompt very closely.
 It may for example say "This is the text you asked for" instead of just reading the text.
+
+The API is documented at [cloud.google.com](https://cloud.google.com/text-to-speech/docs/reference/rest/v1beta1/text/synthesize).
