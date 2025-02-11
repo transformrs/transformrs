@@ -26,6 +26,7 @@ async fn tts_helper(
 async fn test_tts_deepinfra() {
     let mut config = transformrs::text_to_speech::TTSConfig::default();
     config.voice = Some("am_echo".to_string());
+    config.output_format = Some("mp3".to_string());
     let model = Some("hexgrad/Kokoro-82M");
     let provider = Provider::DeepInfra;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
