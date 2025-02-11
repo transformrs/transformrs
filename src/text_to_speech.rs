@@ -77,7 +77,6 @@ impl SpeechResponse {
     pub fn structured(&self) -> Result<Speech, Box<dyn Error + Send + Sync>> {
         if self.provider == Provider::DeepInfra {
             let resp = serde_json::from_slice::<Value>(&self.resp).unwrap();
-            println!("resp: {:?}", resp);
             let audio = resp["audio"].as_str().unwrap();
             let out = Speech {
                 request_id: Some(resp["request_id"].as_str().unwrap().to_string()),
@@ -165,6 +164,7 @@ pub async fn tts(
     if let Some(speed) = config.speed {
         body["speed"] = Value::from(speed);
     }
+    println!("body: {:?}", body);
     let headers = if key.provider == Provider::Google {
         let mut headers = request_headers(key)?;
         headers.remove("Authorization");
