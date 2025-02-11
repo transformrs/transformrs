@@ -14,23 +14,12 @@ use serde_json::json;
 use serde_json::Value;
 use std::error::Error;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct TTSConfig {
     pub output_format: Option<String>,
     pub voice: Option<String>,
     pub speed: Option<f32>,
     pub language_code: Option<String>,
-}
-
-impl Default for TTSConfig {
-    fn default() -> Self {
-        Self {
-            output_format: None,
-            voice: None,
-            speed: None,
-            language_code: None,
-        }
-    }
 }
 
 fn address(key: &Key, model: Option<&str>) -> String {
@@ -68,12 +57,8 @@ impl Speech {
         let stripped = if provider == &Provider::DeepInfra {
             let deepinfra_prefix = "data:audio/mp3;base64,";
             audio.strip_prefix(deepinfra_prefix).unwrap()
-        } else if provider == &Provider::Hyperbolic {
-            audio
-        } else if provider == &Provider::Google {
-            audio
         } else {
-            panic!("Unsupported TTS provider: {}", provider);
+            audio
         };
         let bytes = BASE64_STANDARD.decode(stripped).expect("no decode");
         Ok(Bytes::from(bytes))
