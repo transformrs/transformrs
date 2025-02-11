@@ -157,8 +157,10 @@ pub async fn tts(
                 "pitch": 0,
                 "speakingRate": 1
             });
-        } else {
+        } else if key.provider == Provider::DeepInfra {
             body["preset_voice"] = Value::String(voice.clone());
+        } else {
+            panic!("Unsupported TTS provider: {}", key.provider);
         }
     }
     if let Some(speed) = config.speed {
