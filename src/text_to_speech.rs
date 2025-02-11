@@ -5,12 +5,13 @@
 use crate::request_headers;
 use crate::Key;
 use crate::Provider;
+use serde_json::json;
+use serde_json::Value;
 use base64::prelude::*;
 use bytes::Bytes;
 use reqwest;
 use serde::Deserialize;
 use serde::Serialize;
-use serde_json::Value;
 use std::error::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -18,14 +19,16 @@ pub struct TTSConfig {
     pub output_format: Option<String>,
     pub voice: Option<String>,
     pub speed: Option<f32>,
+    pub language_code: Option<String>,
 }
 
 impl Default for TTSConfig {
     fn default() -> Self {
         Self {
-            output_format: Some("mp3".to_string()),
+            output_format: None,
             voice: None,
             speed: None,
+            language_code: None,
         }
     }
 }
@@ -137,36 +140,50 @@ pub async fn tts(
     text: &str,
 ) -> Result<SpeechResponse, Box<dyn Error + Send + Sync>> {
     let address = address(key, model);
-    let mut body = serde_json::json!({});
+    let mut body = json!({});
     if key.provider == Provider::OpenAI {
-        body["input"] = serde_json::Value::String(text.to_string());
+        body["input"] = Value::String(text.to_string());
     } else if key.provider == Provider::Google {
-        body["input"] = serde_json::json!({
+        body["input"] = json!({
             "text": text.to_string()
         });
     } else {
-        body["text"] = serde_json::Value::String(text.to_string());
+        body["text"] = Value::String(text.to_string());
     }
     if let Some(model) = &model {
-        body["model"] = serde_json::Value::String(model.to_string());
+        body["model"] = Value::String(model.to_string());
     }
     if let Some(output_format) = &config.output_format {
-        body["output_format"] = serde_json::Value::String(output_format.clone());
+        body["output_format"] = Value::String(output_format.clone());
     }
     if let Some(voice) = &config.voice {
         if key.provider == Provider::OpenAI {
-            body["voice"] = serde_json::Value::String(voice.clone());
+            body["voice"] = Value::String(voice.clone());
+        } else if key.provider == Provider::Google {
+            body["voice"] = json!({
+                "name": voice.clone()
+            });
+            if let Some(language_code) = &config.language_code {
+                body["voice"]["languageCode"] = Value::String(language_code.clone());
+            }
         } else {
-            body["preset_voice"] = serde_json::Value::String(voice.clone());
+            body["preset_voice"] = Value::String(voice.clone());
         }
     }
     if let Some(speed) = config.speed {
-        body["speed"] = serde_json::Value::from(speed);
+        body["speed"] = Value::from(speed);
     }
+    let headers = if key.provider == Provider::Google {
+        let mut headers = request_headers(key)?;
+        headers.remove("Authorization");
+        headers
+    } else {
+        request_headers(key)?
+    };
     let client = reqwest::Client::new();
     let resp = client
         .post(address)
-        .headers(request_headers(key)?)
+        .headers(headers)
         .json(&body)
         .send()
         .await?;
