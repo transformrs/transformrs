@@ -10,24 +10,16 @@ use bytes::Bytes;
 use reqwest;
 use serde::Deserialize;
 use serde::Serialize;
+use serde_json::json;
 use serde_json::Value;
 use std::error::Error;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct TTSConfig {
     pub output_format: Option<String>,
     pub voice: Option<String>,
     pub speed: Option<f32>,
-}
-
-impl Default for TTSConfig {
-    fn default() -> Self {
-        Self {
-            output_format: Some("mp3".to_string()),
-            voice: None,
-            speed: None,
-        }
-    }
+    pub language_code: Option<String>,
 }
 
 fn address(key: &Key, model: Option<&str>) -> String {
@@ -38,6 +30,10 @@ fn address(key: &Key, model: Option<&str>) -> String {
         format!("{}/v1/audio/generation", key.provider.domain())
     } else if key.provider == Provider::OpenAI {
         format!("{}/v1/audio/speech", key.provider.domain())
+    } else if key.provider == Provider::Google {
+        let domain = "https://texttospeech.googleapis.com";
+        let path = "/v1beta1/text:synthesize";
+        format!("{domain}{path}?key={}", key.key)
     } else {
         panic!("Unsupported TTS provider: {}", key.provider);
     }
@@ -60,11 +56,9 @@ impl Speech {
     ) -> Result<Bytes, Box<dyn Error + Send + Sync>> {
         let stripped = if provider == &Provider::DeepInfra {
             let deepinfra_prefix = "data:audio/mp3;base64,";
-            audio.strip_prefix(deepinfra_prefix).unwrap()
-        } else if provider == &Provider::Hyperbolic {
-            audio
+            audio.strip_prefix(deepinfra_prefix).expect("no mp3 prefix")
         } else {
-            panic!("Unsupported TTS provider: {}", provider);
+            audio
         };
         let bytes = BASE64_STANDARD.decode(stripped).expect("no decode");
         Ok(Bytes::from(bytes))
@@ -83,7 +77,6 @@ impl SpeechResponse {
     pub fn structured(&self) -> Result<Speech, Box<dyn Error + Send + Sync>> {
         if self.provider == Provider::DeepInfra {
             let resp = serde_json::from_slice::<Value>(&self.resp).unwrap();
-            println!("resp: {:?}", resp);
             let audio = resp["audio"].as_str().unwrap();
             let out = Speech {
                 request_id: Some(resp["request_id"].as_str().unwrap().to_string()),
@@ -107,6 +100,19 @@ impl SpeechResponse {
                 audio: self.resp.clone(),
             };
             Ok(out)
+        } else if self.provider == Provider::Google {
+            let resp = serde_json::from_slice::<Value>(&self.resp).unwrap();
+            if resp.get("error").is_some() {
+                panic!("Google returned an error: {}", resp["error"]);
+            }
+            let audio = &resp["audioContent"].as_str().expect("audioContent");
+            let _timepoints = &resp["timepoints"].as_array().unwrap();
+            let out = Speech {
+                request_id: None,
+                file_format: "mp3".to_string(),
+                audio: Speech::base64_decode(audio, &self.provider)?,
+            };
+            Ok(out)
         } else {
             panic!("Unsupported TTS provider: {}", self.provider);
         }
@@ -120,32 +126,57 @@ pub async fn tts(
     text: &str,
 ) -> Result<SpeechResponse, Box<dyn Error + Send + Sync>> {
     let address = address(key, model);
-    let mut body = serde_json::json!({});
+    let mut body = json!({});
     if key.provider == Provider::OpenAI {
-        body["input"] = serde_json::Value::String(text.to_string());
+        body["input"] = Value::String(text.to_string());
+    } else if key.provider == Provider::Google {
+        body["input"] = json!({
+            "text": text.to_string()
+        });
     } else {
-        body["text"] = serde_json::Value::String(text.to_string());
+        body["text"] = Value::String(text.to_string());
     }
     if let Some(model) = &model {
-        body["model"] = serde_json::Value::String(model.to_string());
-    }
-    if let Some(output_format) = &config.output_format {
-        body["output_format"] = serde_json::Value::String(output_format.clone());
+        body["model"] = Value::String(model.to_string());
     }
     if let Some(voice) = &config.voice {
         if key.provider == Provider::OpenAI {
-            body["voice"] = serde_json::Value::String(voice.clone());
+            body["voice"] = Value::String(voice.clone());
+        } else if key.provider == Provider::Google {
+            body["voice"] = json!({
+                "name": voice.clone()
+            });
+            if let Some(language_code) = &config.language_code {
+                body["voice"]["languageCode"] = Value::String(language_code.clone());
+            }
+            body["audioConfig"] = json!({
+                "audioEncoding": "LINEAR16",
+                "pitch": 0,
+                "speakingRate": 1
+            });
+        } else if key.provider == Provider::DeepInfra {
+            body["preset_voice"] = Value::String(voice.clone());
         } else {
-            body["preset_voice"] = serde_json::Value::String(voice.clone());
+            panic!("Unsupported TTS provider: {}", key.provider);
         }
     }
     if let Some(speed) = config.speed {
-        body["speed"] = serde_json::Value::from(speed);
+        body["speed"] = Value::from(speed);
     }
+    if let Some(output_format) = &config.output_format {
+        body["output_format"] = Value::String(output_format.clone());
+    }
+    let headers = if key.provider == Provider::Google {
+        let mut headers = request_headers(key)?;
+        headers.remove("Authorization");
+        headers
+    } else {
+        request_headers(key)?
+    };
     let client = reqwest::Client::new();
     let resp = client
         .post(address)
-        .headers(request_headers(key)?)
+        .headers(headers)
         .json(&body)
         .send()
         .await?;

@@ -29,10 +29,15 @@ jobs:
       - run: |
           cargo test --all-features
 
+          echo "Running chat example"
           cargo run --example chat
+          echo "Running image-chat example"
           cargo run --example image-chat
+          echo "Running streaming-chat example"
           cargo run --example streaming-chat
+          echo "Running text-to-image example"
           cargo run --example text-to-image
+          echo "Running text-to-speech example"
           cargo run --example text-to-speech
         env:
           DEEPINFRA_KEY: ${{ secrets.DEEPINFRA_KEY }}

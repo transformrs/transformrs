@@ -26,6 +26,7 @@ async fn tts_helper(
 async fn test_tts_deepinfra() {
     let mut config = transformrs::text_to_speech::TTSConfig::default();
     config.voice = Some("am_echo".to_string());
+    config.output_format = Some("mp3".to_string());
     let model = Some("hexgrad/Kokoro-82M");
     let provider = Provider::DeepInfra;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
@@ -62,5 +63,17 @@ async fn test_tts_openai() {
     let provider = Provider::OpenAI;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
     let mut file = File::create("tests/tmp-openai.mp3").unwrap();
+    file.write_all(&speech.audio.clone()).unwrap();
+}
+
+#[tokio::test]
+async fn test_tts_google() {
+    let mut config = transformrs::text_to_speech::TTSConfig::default();
+    config.voice = Some("en-US-Studio-Q".to_string());
+    config.language_code = Some("en-US".to_string());
+    let model = None;
+    let provider = Provider::Google;
+    let speech = tts_helper(&provider, &config, model).await.unwrap();
+    let mut file = File::create("tests/tmp-google.mp3").unwrap();
     file.write_all(&speech.audio.clone()).unwrap();
 }
