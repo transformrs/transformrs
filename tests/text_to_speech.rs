@@ -64,3 +64,14 @@ async fn test_tts_openai() {
     let mut file = File::create("tests/tmp-openai.mp3").unwrap();
     file.write_all(&speech.audio.clone()).unwrap();
 }
+
+#[tokio::test]
+async fn test_tts_google() {
+    let mut config = transformrs::text_to_speech::TTSConfig::default();
+    config.voice = Some("alloy".to_string());
+    let model = Some("tts-1");
+    let provider = Provider::OpenAI;
+    let speech = tts_helper(&provider, &config, model).await.unwrap();
+    let mut file = File::create("tests/tmp-openai.mp3").unwrap();
+    file.write_all(&speech.audio.clone()).unwrap();
+}
