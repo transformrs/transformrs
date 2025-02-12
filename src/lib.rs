@@ -226,7 +226,7 @@ pub struct Key {
 
 #[derive(Clone, Debug)]
 pub struct Keys {
-    keys: Vec<Key>,
+    pub keys: Vec<Key>,
 }
 
 impl Keys {
