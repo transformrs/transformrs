@@ -80,7 +80,7 @@ impl SpeechResponse {
     pub fn structured(&self) -> Result<Speech, Box<dyn Error + Send + Sync>> {
         if self.provider == Provider::DeepInfra {
             let resp = self.raw_value()?;
-            let audio = resp["audio"].as_str().unwrap();
+            let audio = resp["audio"].as_str().expect("no audio in resp");
             let out = Speech {
                 request_id: Some(resp["request_id"].as_str().unwrap().to_string()),
                 file_format: resp["output_format"].as_str().unwrap().to_string(),
