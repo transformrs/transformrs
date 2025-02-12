@@ -1,6 +1,7 @@
 use crate::request_headers;
 use crate::Key;
 use crate::Message;
+use bytes::Bytes;
 use crate::Provider;
 use futures::Stream;
 use futures::StreamExt;
@@ -112,15 +113,19 @@ fn extract_error(body: &Value) -> String {
 /// not confine."
 pub struct ChatCompletionResponse {
     status: u16,
-    resp: Value,
+    resp: Bytes,
 }
 
 impl ChatCompletionResponse {
-    pub fn raw(&self) -> &Value {
+    pub fn bytes(&self) -> &Bytes {
         &self.resp
     }
+    pub fn raw_value(&self) -> Result<Value, Box<dyn Error + Send + Sync>> {
+        Ok(serde_json::from_slice::<Value>(&self.resp)?)
+    }
     pub fn structured(&self) -> Result<ChatCompletion, Box<dyn Error + Send + Sync>> {
-        let text = self.resp.to_string();
+        let json = self.raw_value()?;
+        let text = json.to_string();
         if text.is_empty() {
             return Err(
                 format!("Received empty response with status code: {}", self.status).into(),
@@ -148,10 +153,9 @@ pub async fn chat_completion(
     let stream = false;
     let resp = request_chat_completion(provider, key, model, stream, messages).await?;
     let status = resp.status();
-    let text = resp.text().await?;
     let chat_completion_response = ChatCompletionResponse {
         status: status.into(),
-        resp: serde_json::from_str::<Value>(&text)?,
+        resp: resp.bytes().await?,
     };
     Ok(chat_completion_response)
 }

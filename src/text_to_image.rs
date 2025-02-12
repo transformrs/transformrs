@@ -11,6 +11,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
 use std::error::Error;
+use bytes::Bytes;
 
 /// Configuration for text-to-image.
 #[derive(Debug, Serialize, Deserialize)]
@@ -51,7 +52,7 @@ pub struct Base64Image {
 
 pub struct Image {
     pub filetype: String,
-    pub image: Vec<u8>,
+    pub image: Bytes,
 }
 
 impl Base64Image {
@@ -69,7 +70,7 @@ impl Base64Image {
         let bytes = BASE64_STANDARD.decode(image.as_bytes()).expect("no decode");
         Ok(Image {
             filetype: filetype.to_string(),
-            image: bytes,
+            image: Bytes::from(bytes),
         })
     }
 }
@@ -81,16 +82,20 @@ pub struct Images {
 
 pub struct ImageResponse {
     provider: Provider,
-    resp: Value,
+    resp: Bytes,
 }
 
 impl ImageResponse {
-    pub fn raw(&self) -> &Value {
+    pub fn bytes(&self) -> &Bytes {
         &self.resp
     }
+    pub fn raw_value(&self) -> Result<Value, Box<dyn Error + Send + Sync>> {
+        Ok(serde_json::from_slice::<Value>(&self.resp)?)
+    }
     pub fn structured(&self) -> Result<Images, Box<dyn Error + Send + Sync>> {
+        let json = self.raw_value()?;
         let json: Images = if self.provider == Provider::DeepInfra {
-            let image = self.resp["images"][0].clone();
+            let image = json["images"][0].clone();
             let images: Vec<Base64Image> = vec![Base64Image {
                 index: 0,
                 random_seed: None,
@@ -98,10 +103,10 @@ impl ImageResponse {
             }];
             Images { images }
         } else {
-            match serde_json::from_value(self.resp.clone()) {
+            match serde_json::from_value(json.clone()) {
                 Ok(json) => json,
                 Err(e) => {
-                    return Err(format!("{e} in response:\n{}", self.resp).into());
+                    return Err(format!("{e} in response:\n{}", json).into());
                 }
             }
         };
@@ -140,7 +145,7 @@ pub async fn text_to_image(
         .await?;
     let image_response = ImageResponse {
         provider: key.provider.clone(),
-        resp: resp.json::<Value>().await?,
+        resp: resp.bytes().await?,
     };
     Ok(image_response)
 }

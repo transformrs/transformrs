@@ -71,12 +71,15 @@ pub struct SpeechResponse {
 }
 
 impl SpeechResponse {
-    pub fn raw(&self) -> &Bytes {
+    pub fn bytes(&self) -> &Bytes {
         &self.resp
+    }
+    pub fn raw_value(&self) -> Result<Value, Box<dyn Error + Send + Sync>> {
+        Ok(serde_json::from_slice::<Value>(&self.resp)?)
     }
     pub fn structured(&self) -> Result<Speech, Box<dyn Error + Send + Sync>> {
         if self.provider == Provider::DeepInfra {
-            let resp = serde_json::from_slice::<Value>(&self.resp).unwrap();
+            let resp = self.raw_value()?;
             let audio = resp["audio"].as_str().unwrap();
             let out = Speech {
                 request_id: Some(resp["request_id"].as_str().unwrap().to_string()),
@@ -85,7 +88,7 @@ impl SpeechResponse {
             };
             Ok(out)
         } else if self.provider == Provider::Hyperbolic {
-            let resp = serde_json::from_slice::<Value>(&self.resp).unwrap();
+            let resp = self.raw_value()?;
             let audio = &resp["audio"].as_str().unwrap();
             let out = Speech {
                 request_id: None,
@@ -101,7 +104,7 @@ impl SpeechResponse {
             };
             Ok(out)
         } else if self.provider == Provider::Google {
-            let resp = serde_json::from_slice::<Value>(&self.resp).unwrap();
+            let resp = self.raw_value()?;
             if resp.get("error").is_some() {
                 panic!("Google returned an error: {}", resp["error"]);
             }
