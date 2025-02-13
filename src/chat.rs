@@ -4,10 +4,8 @@ use crate::Message;
 use crate::Provider;
 use async_stream::stream;
 use bytes::Bytes;
-use futures::pin_mut;
 use futures::Stream;
 use futures::StreamExt;
-use futures::TryStreamExt;
 use reqwest;
 use reqwest::Response;
 use serde::Deserialize;
@@ -199,27 +197,22 @@ fn parse_data(line: &str) -> Option<ChatCompletionChunk> {
     }
 }
 
-fn process_line(line: &str, buffer: &mut String) -> Option<ChatCompletionChunk> {
-    if buffer.is_empty() {
-        match parse_data(line) {
-            Some(chunk) => Some(chunk),
-            None => {
-                buffer.push_str(line);
-                None
-            }
+fn process_line(buffer: &mut String, line: &str) -> Option<ChatCompletionChunk> {
+    let line = line.trim();
+    if line.is_empty() {
+        return None;
+    }
+
+    if let Some(json_str) = line.strip_prefix("data: ") {
+        if json_str == "[DONE]" {
+            return None;
+        }
+        match serde_json::from_str::<ChatCompletionChunk>(json_str) {
+            Ok(chunk) => Some(chunk),
+            Err(_) => None,
         }
     } else {
-        let line = format!("{}{}", buffer, line);
-        match parse_data(&line) {
-            Some(chunk) => {
-                buffer.clear();
-                Some(chunk)
-            }
-            None => {
-                buffer.push_str(&line);
-                None
-            }
-        }
+        None
     }
 }
 
@@ -233,20 +226,44 @@ pub async fn stream_chat_completion(
 
     let stream = stream! {
         let mut buffer = String::new();
-        let stream = resp.bytes_stream().map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>);
+        let mut byte_stream = resp.bytes_stream();
 
-        pin_mut!(stream);
-        while let Some(chunk) = stream.next().await {
+        while let Some(chunk) = byte_stream.next().await {
             let chunk = match chunk {
                 Ok(c) => c,
-                Err(_e) => break,
+                Err(_) => break,
             };
 
-            let text = String::from_utf8_lossy(&chunk);
-            for line in text.lines() {
-                if let Some(chunk) = process_line(line, &mut buffer) {
+            // Process chunks as they arrive without converting to full String
+            let mut current_text = String::from_utf8_lossy(&chunk).into_owned();
+
+            // Prepend any buffered data from previous chunks
+            if !buffer.is_empty() {
+                current_text.insert_str(0, &buffer);
+                buffer.clear();
+            }
+
+            // Split lines while preserving the buffer between chunks
+            let mut lines = current_text.split_inclusive('\n').peekable();
+
+            while let Some(line) = lines.next() {
+                // Check if this is the last partial line
+                if lines.peek().is_none() && !current_text.ends_with('\n') {
+                    buffer.push_str(line);
+                    continue;
+                }
+
+                if let Some(chunk) = process_line(&mut buffer, line) {
                     yield chunk;
                 }
+            }
+        }
+
+        // Process any remaining data in buffer
+        if !buffer.is_empty() {
+            let final_line = buffer.clone();
+            if let Some(chunk) = process_line(&mut buffer, &final_line) {
+                yield chunk;
             }
         }
     };
