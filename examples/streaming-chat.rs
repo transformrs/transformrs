@@ -1,13 +1,14 @@
 use futures_util::stream::StreamExt;
 use transformrs::chat;
 use transformrs::Message;
+use std::io::Write;
 use transformrs::Provider;
 
 #[tokio::main]
 async fn main() {
     let messages = vec![
         Message::from_str("system", "You are a helpful assistant."),
-        Message::from_str("user", "This is a test. Please respond with 'hello world'."),
+        Message::from_str("user", "Give a one paragraph summary of the history of the internet."),
     ];
     let keys = transformrs::load_keys(".env");
     let provider = Provider::DeepInfra;
@@ -17,10 +18,12 @@ async fn main() {
         .await
         .unwrap();
     while let Some(resp) = stream.next().await {
-        println!(
+        print!(
             "{}",
             resp.choices[0].delta.content.clone().unwrap_or_default()
         );
+        // Ensure the output is printed immediately.
+        std::io::stdout().flush().unwrap();
     }
 }
 
