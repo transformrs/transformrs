@@ -1,8 +1,8 @@
 use crate::request_headers;
 use crate::Key;
 use crate::Message;
-use bytes::Bytes;
 use crate::Provider;
+use bytes::Bytes;
 use futures::Stream;
 use futures::StreamExt;
 use futures::TryStreamExt;
