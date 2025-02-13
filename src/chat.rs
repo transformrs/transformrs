@@ -2,7 +2,9 @@ use crate::request_headers;
 use crate::Key;
 use crate::Message;
 use crate::Provider;
+use async_stream::stream;
 use bytes::Bytes;
+use futures::pin_mut;
 use futures::Stream;
 use futures::StreamExt;
 use futures::TryStreamExt;
@@ -228,22 +230,26 @@ pub async fn stream_chat_completion(
     messages: &[Message],
 ) -> Result<Pin<Box<dyn Stream<Item = ChatCompletionChunk> + Send>>, Box<dyn Error + Send + Sync>> {
     let resp = request_chat_completion(provider, key, model, true, messages).await?;
-    let mut buffer = String::new();
-    let stream = resp
-        .bytes_stream()
-        .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>)
-        .flat_map(move |chunk_result| {
-            let chunk = chunk_result.unwrap();
-            let text = String::from_utf8_lossy(&chunk);
-            // Split on "data: " prefix and filter empty lines
-            let results: Vec<_> = text
-                .lines()
-                .filter(|line| !line.is_empty())
-                .filter_map(|line| process_line(line, &mut buffer))
-                .collect();
 
-            futures::stream::iter(results)
-        });
+    let stream = stream! {
+        let mut buffer = String::new();
+        let stream = resp.bytes_stream().map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>);
+
+        pin_mut!(stream);
+        while let Some(chunk) = stream.next().await {
+            let chunk = match chunk {
+                Ok(c) => c,
+                Err(_e) => break,
+            };
+
+            let text = String::from_utf8_lossy(&chunk);
+            for line in text.lines() {
+                if let Some(chunk) = process_line(line, &mut buffer) {
+                    yield chunk;
+                }
+            }
+        }
+    };
 
     Ok(Box::pin(stream))
 }
