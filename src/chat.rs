@@ -183,21 +183,7 @@ pub struct ChatCompletionChunk {
     pub choices: Vec<ChunkChoice>,
 }
 
-fn parse_data(line: &str) -> Option<ChatCompletionChunk> {
-    if let Some(json_str) = line.strip_prefix("data: ") {
-        if json_str == "[DONE]" || json_str.is_empty() {
-            return None;
-        }
-        match serde_json::from_str::<ChatCompletionChunk>(json_str) {
-            Ok(json) => Some(json),
-            Err(_e) => None,
-        }
-    } else {
-        None
-    }
-}
-
-fn process_line(buffer: &mut String, line: &str) -> Option<ChatCompletionChunk> {
+fn process_line(line: &str) -> Option<ChatCompletionChunk> {
     let line = line.trim();
     if line.is_empty() {
         return None;
@@ -234,11 +220,10 @@ pub async fn stream_chat_completion(
                 Err(_) => break,
             };
 
-            // Process chunks as they arrive without converting to full String
             let mut current_text = String::from_utf8_lossy(&chunk).into_owned();
 
-            // Prepend any buffered data from previous chunks
             if !buffer.is_empty() {
+                // Prepend buffer to current text.
                 current_text.insert_str(0, &buffer);
                 buffer.clear();
             }
@@ -253,7 +238,7 @@ pub async fn stream_chat_completion(
                     continue;
                 }
 
-                if let Some(chunk) = process_line(&mut buffer, line) {
+                if let Some(chunk) = process_line(line) {
                     yield chunk;
                 }
             }
@@ -262,7 +247,7 @@ pub async fn stream_chat_completion(
         // Process any remaining data in buffer
         if !buffer.is_empty() {
             let final_line = buffer.clone();
-            if let Some(chunk) = process_line(&mut buffer, &final_line) {
+            if let Some(chunk) = process_line(&final_line) {
                 yield chunk;
             }
         }
