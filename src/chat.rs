@@ -184,7 +184,6 @@ pub struct ChatCompletionChunk {
 }
 
 fn process_line(line: &str) -> Option<ChatCompletionChunk> {
-    let line = line.trim();
     if line.is_empty() {
         return None;
     }
@@ -223,8 +222,7 @@ pub async fn stream_chat_completion(
             let mut current_text = String::from_utf8_lossy(&chunk).into_owned();
 
             if !buffer.is_empty() {
-                // Prepend buffer to current text.
-                current_text.insert_str(0, &buffer);
+                current_text = format!("{buffer}{current_text}");
                 buffer.clear();
             }
 
@@ -232,22 +230,19 @@ pub async fn stream_chat_completion(
             let mut lines = current_text.split_inclusive('\n').peekable();
 
             while let Some(line) = lines.next() {
-                // Check if this is the last partial line
-                if lines.peek().is_none() && !current_text.ends_with('\n') {
+                let is_last_line = lines.peek().is_none() && !current_text.ends_with('\n');
+                if is_last_line {
                     buffer.push_str(line);
                     continue;
                 }
-
                 if let Some(chunk) = process_line(line) {
                     yield chunk;
                 }
             }
         }
 
-        // Process any remaining data in buffer
         if !buffer.is_empty() {
-            let final_line = buffer.clone();
-            if let Some(chunk) = process_line(&final_line) {
+            if let Some(chunk) = process_line(&buffer) {
                 yield chunk;
             }
         }
