@@ -102,10 +102,17 @@ impl SpeechResponse {
             };
             Ok(out)
         } else if self.provider == Provider::OpenAI {
+            let audio = self.resp.clone();
+            if let Ok(resp) = serde_json::from_slice::<Value>(&self.resp) {
+                tracing::debug!("Response: {resp}");
+                if resp.get("error").is_some() {
+                    return Err(resp["error"].to_string().into());
+                }
+            }
             let out = Speech {
                 request_id: None,
                 file_format: "mp3".to_string(),
-                audio: self.resp.clone(),
+                audio,
             };
             Ok(out)
         } else if self.provider == Provider::Google {

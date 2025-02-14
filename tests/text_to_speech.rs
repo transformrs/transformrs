@@ -79,6 +79,17 @@ async fn test_tts_openai() {
 }
 
 #[tokio::test]
+async fn test_tts_openai_error() {
+    let config = transformrs::text_to_speech::TTSConfig::default();
+    let model = Some("foobar");
+    let provider = Provider::OpenAI;
+    let speech = tts_helper(&provider, &config, model).await;
+    let err = speech.unwrap_err();
+    println!("err: {}", err);
+    assert!(err.to_string().contains("model_not_found"));
+}
+
+#[tokio::test]
 async fn test_tts_google() {
     let mut config = transformrs::text_to_speech::TTSConfig::default();
     config.voice = Some("en-US-Studio-Q".to_string());
