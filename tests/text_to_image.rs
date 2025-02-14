@@ -1,5 +1,7 @@
 extern crate transformrs;
 
+mod common;
+
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
@@ -8,6 +10,7 @@ use transformrs::Provider;
 
 #[tokio::test]
 async fn test_text_to_image_hyperbolic() {
+    common::init_tracing();
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&Provider::Hyperbolic).expect("no key");
     let mut config = transformrs::text_to_image::TTIConfig::default();
@@ -28,6 +31,7 @@ async fn text_to_image_helper(
     model: &str,
     prompt: &str,
 ) -> Result<Image, Box<dyn Error + Send + Sync>> {
+    common::init_tracing();
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).expect("no key");
     let mut config = transformrs::text_to_image::TTIConfig::default();

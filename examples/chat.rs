@@ -1,3 +1,7 @@
+//! An simple example that chat's with an LLM.
+
+// You can execute this example with `cargo run --example chat`
+
 use transformrs::chat;
 use transformrs::Message;
 use transformrs::Provider;

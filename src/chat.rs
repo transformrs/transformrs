@@ -40,6 +40,7 @@ async fn request_chat_completion(
     } else {
         reqwest::Client::new()
     };
+    tracing::debug!("Requesting chat: {body}");
     let resp = client
         .post(address)
         .headers(request_headers(key)?)

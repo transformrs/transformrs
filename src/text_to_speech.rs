@@ -176,6 +176,7 @@ pub async fn tts(
     } else {
         request_headers(key)?
     };
+    tracing::debug!("Requesting text-to-speech: {body}");
     let client = reqwest::Client::new();
     let resp = client
         .post(address)

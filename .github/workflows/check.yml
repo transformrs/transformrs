@@ -31,6 +31,8 @@ jobs:
 
           echo "Running chat example"
           cargo run --example chat
+          echo "Running debug example"
+          cargo run --example debug
           echo "Running image-chat example"
           cargo run --example image-chat
           echo "Running streaming-chat example"

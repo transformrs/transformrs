@@ -136,6 +136,7 @@ pub async fn text_to_image(
     if let Some(width) = config.width {
         body["width"] = serde_json::Value::from(width);
     }
+    tracing::debug!("Requesting image: {body}");
     let client = reqwest::Client::new();
     let resp = client
         .post(address)

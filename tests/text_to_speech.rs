@@ -1,5 +1,7 @@
 extern crate transformrs;
 
+mod common;
+
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
@@ -12,6 +14,7 @@ async fn tts_helper(
     config: &TTSConfig,
     model: Option<&str>,
 ) -> Result<Speech, Box<dyn Error + Send + Sync>> {
+    common::init_tracing();
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).unwrap();
     let msg = "Hello, world!";

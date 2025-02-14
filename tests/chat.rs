@@ -1,5 +1,7 @@
 extern crate transformrs;
 
+mod common;
+
 use futures_util::stream::StreamExt;
 use std::error::Error;
 use transformrs::chat;
@@ -33,6 +35,7 @@ async fn test_chat_completion_no_stream(
     model: &str,
     expected: Option<&str>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    common::init_tracing();
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).expect("no key found");
     let messages = messages.clone();
@@ -202,6 +205,7 @@ async fn chat_completion_stream_helper(
     key: &Key,
     model: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
+    common::init_tracing();
     let messages = hello_messages();
     let mut stream = chat::stream_chat_completion(provider, key, model, &messages)
         .await
