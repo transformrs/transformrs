@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-02-14
+
+### Added
+
+- Return error when it occurs for text to speech ([#15](https://github.com/rikhuijzer/transformrs/pull/15) and [#16](https://github.com/rikhuijzer/transformrs/pull/16)).
+- Allow request body to be printed via `tracing` ([#17](https://github.com/rikhuijzer/transformrs/pull/17)).
+
+### Fixed
+
+- Streaming now prints word (parts) instead of only full sentences or paragraphs ([#19](https://github.com/rikhuijzer/transformrs/pull/19)).
+
 ## [0.5.0] - 2025-02-12
 
 ### Added
