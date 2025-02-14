@@ -21,8 +21,7 @@ async fn tts_helper(
     let resp = transformrs::text_to_speech::tts(&key, config, model, msg)
         .await
         .unwrap();
-    let resp = resp.structured().unwrap();
-    Ok(resp)
+    resp.structured()
 }
 
 #[tokio::test]
@@ -40,6 +39,16 @@ async fn test_tts_deepinfra() {
     // Can be used to manually verify the output.
     let mut file = File::create("tests/tmp-deepinfra.mp3").unwrap();
     file.write_all(&bytes).unwrap();
+}
+
+#[tokio::test]
+async fn test_tts_deepinfra_error() {
+    let config = transformrs::text_to_speech::TTSConfig::default();
+    let model = Some("foobar");
+    let provider = Provider::DeepInfra;
+    let speech = tts_helper(&provider, &config, model).await;
+    let err = speech.unwrap_err();
+    assert!(err.to_string().contains("Model is not available"));
 }
 
 #[tokio::test]
@@ -79,4 +88,15 @@ async fn test_tts_google() {
     let speech = tts_helper(&provider, &config, model).await.unwrap();
     let mut file = File::create("tests/tmp-google.mp3").unwrap();
     file.write_all(&speech.audio.clone()).unwrap();
+}
+
+#[tokio::test]
+async fn test_tts_google_error() {
+    let config = transformrs::text_to_speech::TTSConfig::default();
+    let model = Some("foobar");
+    let provider = Provider::Google;
+    let speech = tts_helper(&provider, &config, model).await;
+    let err = speech.unwrap_err();
+    println!("err: {}", err);
+    assert!(err.to_string().contains("INVALID_ARGUMENT"));
 }

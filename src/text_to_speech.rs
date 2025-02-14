@@ -80,6 +80,10 @@ impl SpeechResponse {
     pub fn structured(&self) -> Result<Speech, Box<dyn Error + Send + Sync>> {
         if self.provider == Provider::DeepInfra {
             let resp = self.raw_value()?;
+            tracing::debug!("Response: {resp}");
+            if resp.get("detail").is_some() {
+                return Err(format!("DeepInfra returned an error: {}", resp["detail"]).into());
+            }
             let audio = resp["audio"].as_str().expect("no audio in resp");
             let out = Speech {
                 request_id: Some(resp["request_id"].as_str().unwrap().to_string()),
@@ -89,6 +93,7 @@ impl SpeechResponse {
             Ok(out)
         } else if self.provider == Provider::Hyperbolic {
             let resp = self.raw_value()?;
+            tracing::debug!("Response: {resp}");
             let audio = &resp["audio"].as_str().unwrap();
             let out = Speech {
                 request_id: None,
@@ -105,8 +110,9 @@ impl SpeechResponse {
             Ok(out)
         } else if self.provider == Provider::Google {
             let resp = self.raw_value()?;
+            tracing::debug!("Response: {resp}");
             if resp.get("error").is_some() {
-                panic!("Google returned an error: {}", resp["error"]);
+                return Err(resp["error"].to_string().into());
             }
             let audio = &resp["audioContent"].as_str().expect("audioContent");
             let _timepoints = &resp["timepoints"].as_array().unwrap();
