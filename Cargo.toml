@@ -9,6 +9,7 @@ license = "MIT"
 rust-version = "1.81"
 
 [dependencies]
+async-stream = "0.3.6"
 base64 = "0.22.1"
 bytes = "1.10.0"
 futures = "0.3.31"

@@ -1,11 +1,11 @@
 use crate::request_headers;
 use crate::Key;
 use crate::Message;
-use bytes::Bytes;
 use crate::Provider;
+use async_stream::stream;
+use bytes::Bytes;
 use futures::Stream;
 use futures::StreamExt;
-use futures::TryStreamExt;
 use reqwest;
 use reqwest::Response;
 use serde::Deserialize;
@@ -183,41 +183,21 @@ pub struct ChatCompletionChunk {
     pub choices: Vec<ChunkChoice>,
 }
 
-fn parse_data(line: &str) -> Option<ChatCompletionChunk> {
+fn process_line(line: &str) -> Option<ChatCompletionChunk> {
+    if line.is_empty() {
+        return None;
+    }
+
     if let Some(json_str) = line.strip_prefix("data: ") {
-        if json_str == "[DONE]" || json_str.is_empty() {
+        if json_str == "[DONE]" {
             return None;
         }
         match serde_json::from_str::<ChatCompletionChunk>(json_str) {
-            Ok(json) => Some(json),
-            Err(_e) => None,
+            Ok(chunk) => Some(chunk),
+            Err(_) => None,
         }
     } else {
         None
-    }
-}
-
-fn process_line(line: &str, buffer: &mut String) -> Option<ChatCompletionChunk> {
-    if buffer.is_empty() {
-        match parse_data(line) {
-            Some(chunk) => Some(chunk),
-            None => {
-                buffer.push_str(line);
-                None
-            }
-        }
-    } else {
-        let line = format!("{}{}", buffer, line);
-        match parse_data(&line) {
-            Some(chunk) => {
-                buffer.clear();
-                Some(chunk)
-            }
-            None => {
-                buffer.push_str(&line);
-                None
-            }
-        }
     }
 }
 
@@ -228,22 +208,43 @@ pub async fn stream_chat_completion(
     messages: &[Message],
 ) -> Result<Pin<Box<dyn Stream<Item = ChatCompletionChunk> + Send>>, Box<dyn Error + Send + Sync>> {
     let resp = request_chat_completion(provider, key, model, true, messages).await?;
-    let mut buffer = String::new();
-    let stream = resp
-        .bytes_stream()
-        .map_err(|e| Box::new(e) as Box<dyn Error + Send + Sync>)
-        .flat_map(move |chunk_result| {
-            let chunk = chunk_result.unwrap();
-            let text = String::from_utf8_lossy(&chunk);
-            // Split on "data: " prefix and filter empty lines
-            let results: Vec<_> = text
-                .lines()
-                .filter(|line| !line.is_empty())
-                .filter_map(|line| process_line(line, &mut buffer))
-                .collect();
 
-            futures::stream::iter(results)
-        });
+    let stream = stream! {
+        let mut buffer = String::new();
+        let mut byte_stream = resp.bytes_stream();
+
+        while let Some(chunk) = byte_stream.next().await {
+            let chunk = match chunk {
+                Ok(c) => c,
+                Err(_) => break,
+            };
+
+            let mut current_text = String::from_utf8_lossy(&chunk).to_string();
+
+            if !buffer.is_empty() {
+                current_text = format!("{buffer}{current_text}");
+                buffer.clear();
+            }
+            let mut lines = current_text.split_inclusive('\n').peekable();
+
+            while let Some(line) = lines.next() {
+                let is_last_line = lines.peek().is_none() && !current_text.ends_with('\n');
+                if is_last_line {
+                    buffer.push_str(line);
+                    continue;
+                }
+                if let Some(chunk) = process_line(line) {
+                    yield chunk;
+                }
+            }
+        }
+
+        if !buffer.is_empty() {
+            if let Some(chunk) = process_line(&buffer) {
+                yield chunk;
+            }
+        }
+    };
 
     Ok(Box::pin(stream))
 }
