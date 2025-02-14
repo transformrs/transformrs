@@ -219,14 +219,12 @@ pub async fn stream_chat_completion(
                 Err(_) => break,
             };
 
-            let mut current_text = String::from_utf8_lossy(&chunk).into_owned();
+            let mut current_text = String::from_utf8_lossy(&chunk).to_string();
 
             if !buffer.is_empty() {
                 current_text = format!("{buffer}{current_text}");
                 buffer.clear();
             }
-
-            // Split lines while preserving the buffer between chunks
             let mut lines = current_text.split_inclusive('\n').peekable();
 
             while let Some(line) = lines.next() {
