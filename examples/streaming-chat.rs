@@ -16,7 +16,7 @@ async fn main() {
     let keys = transformrs::load_keys(".env");
     let provider = Provider::DeepInfra;
     let key = keys.for_provider(&provider).unwrap();
-    let model = "meta-llama/Meta-Llama-3-70B-Instruct";
+    let model = "meta-llama/Llama-3.3-70B-Instruct";
     let mut stream = chat::stream_chat_completion(&provider, &key, model, &messages)
         .await
         .unwrap();
