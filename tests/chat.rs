@@ -46,8 +46,9 @@ async fn test_chat_completion_no_stream(
             return Err(e);
         }
     };
+    let json = resp.raw_value()?;
+    println!("json: {json}");
     let resp = resp.structured()?;
-    println!("{:?}", resp);
     assert_eq!(resp.object, "chat.completion");
     assert_eq!(resp.choices.len(), 1);
     let content = resp.choices[0].message.content.clone();

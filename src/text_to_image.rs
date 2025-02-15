@@ -93,10 +93,13 @@ impl ImageResponse {
         Ok(serde_json::from_slice::<Value>(&self.resp)?)
     }
     pub fn structured(&self) -> Result<Images, Box<dyn Error + Send + Sync>> {
-        let json = self.raw_value()?;
-        tracing::debug!("Response: {json}");
-        let json: Images = if self.provider == Provider::DeepInfra {
-            let image = json["images"][0].clone();
+        let resp = self.raw_value()?;
+        tracing::debug!("Response: {resp}");
+        let resp: Images = if self.provider == Provider::DeepInfra {
+            if resp.get("detail").is_some() {
+                return Err(format!("DeepInfra returned an error: {}", resp["detail"]).into());
+            }
+            let image = resp["images"][0].clone();
             let images: Vec<Base64Image> = vec![Base64Image {
                 index: 0,
                 random_seed: None,
@@ -104,14 +107,14 @@ impl ImageResponse {
             }];
             Images { images }
         } else {
-            match serde_json::from_value(json.clone()) {
+            match serde_json::from_value(resp.clone()) {
                 Ok(json) => json,
                 Err(e) => {
-                    return Err(format!("{e} in response:\n{}", json).into());
+                    return Err(format!("{e} in response:\n{}", resp).into());
                 }
             }
         };
-        Ok(json)
+        Ok(resp)
     }
 }
 
