@@ -16,6 +16,8 @@ Other** | x
 SambaNova | x |
 TogetherAI | x |
 
+For a command line tool that uses this library, see [trf](https://github.com/transformrs/trf).
+
 \*Chat supports streaming and image input.
 
 \*\*Other OpenAI-compatible providers can be used via `Provider::Other(base_url)`.
