@@ -12,6 +12,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
+use std::collections::HashMap;
 use std::error::Error;
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -20,6 +21,7 @@ pub struct TTSConfig {
     pub voice: Option<String>,
     pub speed: Option<f32>,
     pub language_code: Option<String>,
+    pub other: Option<HashMap<String, Value>>,
 }
 
 fn address(key: &Key, model: Option<&str>) -> String {
@@ -181,6 +183,11 @@ pub async fn tts(
     }
     if let Some(output_format) = &config.output_format {
         body["output_format"] = Value::String(output_format.clone());
+    }
+    if let Some(other) = &config.other {
+        for (key, value) in other {
+            body[key] = value.clone();
+        }
     }
     let headers = if key.provider == Provider::Google {
         let mut headers = request_headers(key)?;

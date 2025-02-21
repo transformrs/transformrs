@@ -2,6 +2,8 @@ extern crate transformrs;
 
 mod common;
 
+use serde_json::json;
+use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
@@ -44,6 +46,22 @@ async fn test_tts_deepinfra() {
 #[tokio::test]
 async fn test_tts_deepinfra_error() {
     let config = transformrs::text_to_speech::TTSConfig::default();
+    let model = Some("foobar");
+    let provider = Provider::DeepInfra;
+    let speech = tts_helper(&provider, &config, model).await;
+    let err = speech.unwrap_err();
+    assert!(err.to_string().contains("Model is not available"));
+}
+
+#[tokio::test]
+async fn test_tts_deepinfra_other() {
+    let mut other = HashMap::new();
+    other.insert("seed".to_string(), json!(42));
+    let config = transformrs::text_to_speech::TTSConfig {
+        output_format: Some("mp3".to_string()),
+        other: Some(other),
+        ..Default::default()
+    };
     let model = Some("foobar");
     let provider = Provider::DeepInfra;
     let speech = tts_helper(&provider, &config, model).await;
