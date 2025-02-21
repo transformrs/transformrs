@@ -15,7 +15,8 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::error::Error;
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+/// Text-to-speech config
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct TTSConfig {
     pub output_format: Option<String>,
     pub voice: Option<String>,
