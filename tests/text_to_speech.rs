@@ -29,7 +29,7 @@ async fn tts_helper(
     let keys = transformrs::load_keys(".env");
     let key = keys.for_provider(&provider).unwrap();
     let msg = "Hello, world!";
-    let resp = transformrs::text_to_speech::tts(&key, config, model, msg)
+    let resp = transformrs::text_to_speech::tts(provider, &key, config, model, msg)
         .await
         .unwrap();
     resp.structured()
@@ -149,7 +149,6 @@ async fn test_tts_openai_compatible() {
         ..Default::default()
     };
     let model = Some("tts-1");
-    // Keys will be ignored by kokoros.transformrs.org.
     let provider = Provider::OpenAICompatible("https://kokoros.transformrs.org".to_string());
     let speech = tts_helper(&provider, &config, model).await.unwrap();
     let mut file = File::create("tests/tmp-openai-compatible.mp3").unwrap();

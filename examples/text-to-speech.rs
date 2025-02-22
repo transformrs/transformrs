@@ -23,7 +23,7 @@ async fn main() {
     };
     let msg = "Hello, world! This is a test of the TTS API.";
     let model = Some("Zyphra/Zonos-v0.1-hybrid");
-    let resp = transformrs::text_to_speech::tts(&key, &config, model, msg)
+    let resp = transformrs::text_to_speech::tts(&provider, &key, &config, model, msg)
         .await
         .unwrap()
         .structured()

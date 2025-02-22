@@ -25,20 +25,26 @@ pub struct TTSConfig {
     pub other: Option<HashMap<String, Value>>,
 }
 
-fn address(key: &Key, model: Option<&str>) -> String {
-    if key.provider == Provider::DeepInfra {
+fn is_openai_compatible(provider: &Provider) -> bool {
+    matches!(provider, Provider::OpenAICompatible(_))
+}
+
+fn address(provider: &Provider, key: &Key, model: Option<&str>) -> String {
+    if provider == &Provider::DeepInfra {
         let model = model.unwrap_or("hexgrad/Kokoro-82M");
-        format!("{}/v1/inference/{}", key.provider.domain(), model)
-    } else if key.provider == Provider::Hyperbolic {
-        format!("{}/v1/audio/generation", key.provider.domain())
-    } else if key.provider == Provider::OpenAI {
-        format!("{}/v1/audio/speech", key.provider.domain())
-    } else if key.provider == Provider::Google {
+        format!("{}/v1/inference/{}", provider.domain(), model)
+    } else if provider == &Provider::Hyperbolic {
+        format!("{}/v1/audio/generation", provider.domain())
+    } else if provider == &Provider::OpenAI {
+        format!("{}/v1/audio/speech", provider.domain())
+    } else if let Provider::OpenAICompatible(domain) = &provider {
+        format!("{domain}/v1/audio/speech")
+    } else if provider == &Provider::Google {
         let domain = "https://texttospeech.googleapis.com";
         let path = "/v1beta1/text:synthesize";
         format!("{domain}{path}?key={}", key.key)
     } else {
-        panic!("Unsupported TTS provider: {}", key.provider);
+        panic!("Unsupported TTS provider: {}", provider);
     }
 }
 
@@ -115,7 +121,7 @@ impl SpeechResponse {
                 audio: Speech::decode_speech(audio, &self.provider, None)?,
             };
             Ok(out)
-        } else if self.provider == Provider::OpenAI {
+        } else if self.provider == Provider::OpenAI || is_openai_compatible(&self.provider) {
             let audio = self.resp.clone();
             if let Ok(resp) = serde_json::from_slice::<Value>(&self.resp) {
                 tracing::debug!("Response: {resp}");
@@ -150,16 +156,17 @@ impl SpeechResponse {
 }
 
 pub async fn tts(
+    provider: &Provider,
     key: &Key,
     config: &TTSConfig,
     model: Option<&str>,
     text: &str,
 ) -> Result<SpeechResponse, Box<dyn Error + Send + Sync>> {
-    let address = address(key, model);
+    let address = address(provider, key, model);
     let mut body = json!({});
-    if key.provider == Provider::OpenAI {
+    if provider == &Provider::OpenAI || is_openai_compatible(provider) {
         body["input"] = Value::String(text.to_string());
-    } else if key.provider == Provider::Google {
+    } else if provider == &Provider::Google {
         body["input"] = json!({
             "text": text.to_string()
         });
@@ -170,9 +177,9 @@ pub async fn tts(
         body["model"] = Value::String(model.to_string());
     }
     if let Some(voice) = &config.voice {
-        if key.provider == Provider::OpenAI {
+        if provider == &Provider::OpenAI || is_openai_compatible(provider) {
             body["voice"] = Value::String(voice.clone());
-        } else if key.provider == Provider::Google {
+        } else if provider == &Provider::Google {
             body["voice"] = json!({
                 "name": voice.clone()
             });
@@ -184,10 +191,10 @@ pub async fn tts(
                 "pitch": 0,
                 "speakingRate": 1
             });
-        } else if key.provider == Provider::DeepInfra {
+        } else if provider == &Provider::DeepInfra {
             body["preset_voice"] = Value::String(voice.clone());
         } else {
-            panic!("Unsupported TTS provider: {}", key.provider);
+            panic!("Unsupported TTS provider: {}", provider);
         }
     }
     if let Some(speed) = config.speed {
@@ -201,14 +208,14 @@ pub async fn tts(
             body[key] = value.clone();
         }
     }
-    let headers = if key.provider == Provider::Google {
+    let headers = if provider == &Provider::Google {
         let mut headers = request_headers(key)?;
         headers.remove("Authorization");
         headers
     } else {
         request_headers(key)?
     };
-    tracing::debug!("Requesting text-to-speech: {body}");
+    tracing::debug!("Requesting {address} for text-to-speech with {body}");
     let client = reqwest::Client::new();
     let resp = client
         .post(address)
@@ -217,7 +224,7 @@ pub async fn tts(
         .send()
         .await?;
     let speech_response = SpeechResponse {
-        provider: key.provider.clone(),
+        provider: provider.clone(),
         resp: resp.bytes().await?,
     };
     Ok(speech_response)
