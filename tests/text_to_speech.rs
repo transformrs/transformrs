@@ -9,8 +9,6 @@ use std::fs::File;
 use std::io::Write;
 use transformrs::text_to_speech::Speech;
 use transformrs::text_to_speech::TTSConfig;
-use transformrs::Key;
-use transformrs::Keys;
 use transformrs::Provider;
 
 /// Ensure that calling clone compiles.
@@ -151,6 +149,7 @@ async fn test_tts_openai_compatible() {
         ..Default::default()
     };
     let model = Some("tts-1");
+    // Keys will be ignored by kokoros.transformrs.org.
     let provider = Provider::OpenAICompatible("https://kokoros.transformrs.org".to_string());
     let speech = tts_helper(&provider, &config, model).await.unwrap();
     let mut file = File::create("tests/tmp-openai-compatible.mp3").unwrap();
