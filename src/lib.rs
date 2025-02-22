@@ -33,7 +33,7 @@ pub(crate) fn openai_base_url(provider: &Provider) -> String {
         Provider::Hyperbolic => format!("{}/v1", provider.domain()),
         Provider::Mistral => format!("{}/v1", provider.domain()),
         Provider::OpenAI => format!("{}/v1", provider.domain()),
-        Provider::Other(domain) => domain.clone(),
+        Provider::OpenAICompatible(domain) => domain.clone(),
         Provider::SambaNova => format!("{}/v1", provider.domain()),
         Provider::TogetherAI => format!("{}/v1", provider.domain()),
         _ => format!("{}/v1/openai", provider.domain()),
@@ -59,7 +59,7 @@ pub enum Provider {
     /// Another OpenAI-compatible provider.
     ///
     /// For example, "https://api.deepinfra.com/v1/openai".
-    Other(String),
+    OpenAICompatible(String),
     SambaNova,
     TogetherAI,
 }
@@ -86,7 +86,7 @@ impl Provider {
             Provider::Nebius => "https://api.nebi.us",
             Provider::Novita => "https://api.novita.ai",
             Provider::OpenAI => "https://api.openai.com",
-            Provider::Other(base_url) => base_url,
+            Provider::OpenAICompatible(base_url) => base_url,
             Provider::SambaNova => "https://api.sambanova.ai",
             Provider::TogetherAI => "https://api.together.xyz",
         }
@@ -94,7 +94,7 @@ impl Provider {
     }
     pub fn key_name(&self) -> String {
         match self {
-            Provider::Other(_) => "OTHER_KEY".to_string(),
+            Provider::OpenAICompatible(_) => "OPENAI_COMPATIBLE_KEY".to_string(),
             _ => self.to_string().to_uppercase() + "_KEY",
         }
     }
@@ -233,7 +233,9 @@ impl Keys {
     pub fn for_provider(&self, provider: &Provider) -> Option<Key> {
         fn finder(provider: &Provider, key: &Key) -> bool {
             match provider {
-                Provider::Other(_domain) => matches!(&key.provider, Provider::Other(_)),
+                Provider::OpenAICompatible(_) => {
+                    matches!(&key.provider, Provider::OpenAICompatible(_))
+                }
                 _ => key.provider == *provider,
             }
         }
@@ -279,7 +281,7 @@ pub fn load_keys(path: &str) -> Keys {
         Provider::Nebius,
         Provider::Novita,
         Provider::OpenAI,
-        Provider::Other("".to_string()),
+        Provider::OpenAICompatible("".to_string()),
     ];
     for provider in providers {
         if let Ok(key_value) = std::env::var(provider.key_name()) {
