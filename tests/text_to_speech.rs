@@ -66,7 +66,7 @@ async fn test_tts_deepinfra_opus() {
     assert!(bytes.len() > 0);
 
     // Can be used to manually verify the output.
-    let mut file = File::create("tests/tmp-deepinfra.mp3").unwrap();
+    let mut file = File::create("tests/tmp-deepinfra.opus").unwrap();
     file.write_all(&bytes).unwrap();
 }
 
