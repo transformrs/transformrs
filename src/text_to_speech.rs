@@ -53,13 +53,23 @@ impl Speech {
     /// Convert the base64 encoded audio to bytes.
     ///
     /// These bytes can then, for example, be written to a file.
-    pub fn base64_decode(
+    pub fn decode_speech(
         audio: &str,
         provider: &Provider,
+        output_format: Option<&str>,
     ) -> Result<Bytes, Box<dyn Error + Send + Sync>> {
         let stripped = if provider == &Provider::DeepInfra {
-            let deepinfra_prefix = "data:audio/mp3;base64,";
-            audio.strip_prefix(deepinfra_prefix).expect("no mp3 prefix")
+            let output_format = output_format.expect("no output format");
+            tracing::debug!("Decoding DeepInfra speech with output format: {output_format}");
+            let deepinfra_prefix = match output_format {
+                "mp3" => "data:audio/mp3;base64,",
+                "opus" => "data:audio/ogg; codec=\"opus\";base64,",
+                _ => panic!("Unsupported output format: {}", output_format),
+            };
+            match audio.strip_prefix(deepinfra_prefix) {
+                Some(stripped) => stripped,
+                None => panic!("prefix '{deepinfra_prefix}' not found"),
+            }
         } else {
             audio
         };
@@ -88,10 +98,11 @@ impl SpeechResponse {
                 return Err(format!("DeepInfra returned an error: {}", resp["detail"]).into());
             }
             let audio = resp["audio"].as_str().expect("no audio in resp");
+            let output_format = resp["output_format"].as_str().unwrap().to_string();
             let out = Speech {
                 request_id: Some(resp["request_id"].as_str().unwrap().to_string()),
-                file_format: resp["output_format"].as_str().unwrap().to_string(),
-                audio: Speech::base64_decode(audio, &self.provider)?,
+                file_format: output_format.to_string(),
+                audio: Speech::decode_speech(audio, &self.provider, Some(&output_format))?,
             };
             Ok(out)
         } else if self.provider == Provider::Hyperbolic {
@@ -101,7 +112,7 @@ impl SpeechResponse {
             let out = Speech {
                 request_id: None,
                 file_format: "mp3".to_string(),
-                audio: Speech::base64_decode(audio, &self.provider)?,
+                audio: Speech::decode_speech(audio, &self.provider, None)?,
             };
             Ok(out)
         } else if self.provider == Provider::OpenAI {
@@ -129,7 +140,7 @@ impl SpeechResponse {
             let out = Speech {
                 request_id: None,
                 file_format: "mp3".to_string(),
-                audio: Speech::base64_decode(audio, &self.provider)?,
+                audio: Speech::decode_speech(audio, &self.provider, None)?,
             };
             Ok(out)
         } else {

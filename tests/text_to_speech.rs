@@ -54,6 +54,23 @@ async fn test_tts_deepinfra_error() {
 }
 
 #[tokio::test]
+async fn test_tts_deepinfra_opus() {
+    let mut config = transformrs::text_to_speech::TTSConfig::default();
+    config.voice = Some("am_echo".to_string());
+    config.output_format = Some("opus".to_string());
+    let model = Some("hexgrad/Kokoro-82M");
+    let provider = Provider::DeepInfra;
+    let speech = tts_helper(&provider, &config, model).await.unwrap();
+    assert_eq!(speech.file_format, "opus");
+    let bytes = speech.audio.clone();
+    assert!(bytes.len() > 0);
+
+    // Can be used to manually verify the output.
+    let mut file = File::create("tests/tmp-deepinfra.mp3").unwrap();
+    file.write_all(&bytes).unwrap();
+}
+
+#[tokio::test]
 async fn test_tts_deepinfra_other() {
     let mut other = HashMap::new();
     other.insert("seed".to_string(), json!(42));
