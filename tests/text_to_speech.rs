@@ -9,10 +9,12 @@ use std::fs::File;
 use std::io::Write;
 use transformrs::text_to_speech::Speech;
 use transformrs::text_to_speech::TTSConfig;
+use transformrs::Key;
+use transformrs::Keys;
 use transformrs::Provider;
 
 /// Ensure that calling clone compiles.
-/// 
+///
 /// This is to double-check that `Clone` is not removed for `TTSConfig`.
 #[allow(dead_code)]
 fn test_tts_clone() {
@@ -37,9 +39,11 @@ async fn tts_helper(
 
 #[tokio::test]
 async fn test_tts_deepinfra() {
-    let mut config = transformrs::text_to_speech::TTSConfig::default();
-    config.voice = Some("am_echo".to_string());
-    config.output_format = Some("mp3".to_string());
+    let config = transformrs::text_to_speech::TTSConfig {
+        voice: Some("am_echo".to_string()),
+        output_format: Some("mp3".to_string()),
+        ..Default::default()
+    };
     let model = Some("hexgrad/Kokoro-82M");
     let provider = Provider::DeepInfra;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
@@ -64,9 +68,11 @@ async fn test_tts_deepinfra_error() {
 
 #[tokio::test]
 async fn test_tts_deepinfra_opus() {
-    let mut config = transformrs::text_to_speech::TTSConfig::default();
-    config.voice = Some("am_echo".to_string());
-    config.output_format = Some("opus".to_string());
+    let config = transformrs::text_to_speech::TTSConfig {
+        voice: Some("am_echo".to_string()),
+        output_format: Some("opus".to_string()),
+        ..Default::default()
+    };
     let model = Some("hexgrad/Kokoro-82M");
     let provider = Provider::DeepInfra;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
@@ -113,8 +119,10 @@ async fn test_tts_hyperbolic() {
 
 #[tokio::test]
 async fn test_tts_openai() {
-    let mut config = transformrs::text_to_speech::TTSConfig::default();
-    config.voice = Some("alloy".to_string());
+    let config = transformrs::text_to_speech::TTSConfig {
+        voice: Some("alloy".to_string()),
+        ..Default::default()
+    };
     let model = Some("tts-1");
     let provider = Provider::OpenAI;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
@@ -124,7 +132,10 @@ async fn test_tts_openai() {
 
 #[tokio::test]
 async fn test_tts_openai_error() {
-    let config = transformrs::text_to_speech::TTSConfig::default();
+    let config = transformrs::text_to_speech::TTSConfig {
+        voice: Some("alloy".to_string()),
+        ..Default::default()
+    };
     let model = Some("foobar");
     let provider = Provider::OpenAI;
     let speech = tts_helper(&provider, &config, model).await;
@@ -134,10 +145,25 @@ async fn test_tts_openai_error() {
 }
 
 #[tokio::test]
+async fn test_tts_openai_compatible() {
+    let config = transformrs::text_to_speech::TTSConfig {
+        voice: Some("am_adam".to_string()),
+        ..Default::default()
+    };
+    let model = Some("tts-1");
+    let provider = Provider::OpenAICompatible("https://kokoros.transformrs.org".to_string());
+    let speech = tts_helper(&provider, &config, model).await.unwrap();
+    let mut file = File::create("tests/tmp-openai-compatible.mp3").unwrap();
+    file.write_all(&speech.audio.clone()).unwrap();
+}
+
+#[tokio::test]
 async fn test_tts_google() {
-    let mut config = transformrs::text_to_speech::TTSConfig::default();
-    config.voice = Some("en-US-Studio-Q".to_string());
-    config.language_code = Some("en-US".to_string());
+    let config = transformrs::text_to_speech::TTSConfig {
+        voice: Some("en-US-Studio-Q".to_string()),
+        language_code: Some("en-US".to_string()),
+        ..Default::default()
+    };
     let model = None;
     let provider = Provider::Google;
     let speech = tts_helper(&provider, &config, model).await.unwrap();

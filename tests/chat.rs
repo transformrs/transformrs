@@ -194,8 +194,8 @@ async fn test_chat_completion_no_stream_openai_image() {
 }
 
 #[tokio::test]
-async fn test_chat_completion_no_stream_other() {
-    let provider = Provider::Other("https://api.deepinfra.com/v1/openai".to_string());
+async fn test_chat_completion_no_stream_openai_compatible() {
+    let provider = Provider::OpenAICompatible("https://api.deepinfra.com/v1/openai".to_string());
     test_hello_chat_completion_no_stream(provider, MODEL)
         .await
         .unwrap();
