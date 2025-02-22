@@ -11,6 +11,15 @@ use transformrs::text_to_speech::Speech;
 use transformrs::text_to_speech::TTSConfig;
 use transformrs::Provider;
 
+/// Ensure that calling clone compiles.
+/// 
+/// This is to double-check that `Clone` is not removed for `TTSConfig`.
+#[allow(dead_code)]
+fn test_tts_clone() {
+    let config = TTSConfig::default();
+    let _ = config.clone();
+}
+
 async fn tts_helper(
     provider: &Provider,
     config: &TTSConfig,
