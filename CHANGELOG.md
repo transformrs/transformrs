@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2025-02-22
+
+### Added
+
+- Support OpenAI compatible text-to-speech ([#24](https://github.com/transformrs/transformrs/pull/24)).
+
+### Changed
+
+- Rename `Provider::Other(base_url)` to `Provider::OpenAICompatible(base_url)`.
+- Change key name from `OTHER_KEY` to `OPENAI_COMPATIBLE_KEY` (to allow other standards to be added later).
+- Add `Provider` as first argument to `tts`.
+
 ## [0.6.1] - 2025-02-22
 
 ### Added
@@ -18,18 +30,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Return error when it occurs for text to speech ([#15](https://github.com/rikhuijzer/transformrs/pull/15) and [#16](https://github.com/rikhuijzer/transformrs/pull/16)).
-- Allow request body to be printed via `tracing` ([#17](https://github.com/rikhuijzer/transformrs/pull/17)).
+- Return error when it occurs for text to speech ([#15](https://github.com/transformrs/transformrs/pull/15) and [#16](https://github.com/transformrs/transformrs/pull/16)).
+- Allow request body to be printed via `tracing` ([#17](https://github.com/transformrs/transformrs/pull/17)).
 
 ### Fixed
 
-- Streaming now prints word (parts) instead of only full sentences or paragraphs ([#19](https://github.com/rikhuijzer/transformrs/pull/19)).
+- Streaming now prints word (parts) instead of only full sentences or paragraphs ([#19](https://github.com/transformrs/transformrs/pull/19)).
 
 ## [0.5.0] - 2025-02-12
 
 ### Added
 
-- Google text to speech ([#13](https://github.com/rikhuijzer/transformrs/pull/13)).
+- Google text to speech ([#13](https://github.com/transformrs/transformrs/pull/13)).
 - OpenAI text to speech.
 
 ### Changed
@@ -46,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add Hyperbolic text to speech ([#12](https://github.com/rikhuijzer/transformrs/pull/12)).
+- Add Hyperbolic text to speech ([#12](https://github.com/transformrs/transformrs/pull/12)).
 - Add `examples/`.
 - Support arbitrary providers via `Provider::Other(base_url)`.
 - Add models interface to request models from a provider.
@@ -58,8 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support Deep Infra image generation.
-- Add support for images in chat completions ([#7](https://github.com/rikhuijzer/transformrs/pull/7)).
-- Add support for Google Gemini chat completions ([#5](https://github.com/rikhuijzer/transformrs/pull/5)).
+- Add support for images in chat completions ([#7](https://github.com/transformrs/transformrs/pull/7)).
+- Add support for Google Gemini chat completions ([#5](https://github.com/transformrs/transformrs/pull/5)).
 
 ### Changed
 
@@ -76,8 +88,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Text to image ([#4](https://github.com/rikhuijzer/transformrs/pull/4)).
-- Text to speech ([#3](https://github.com/rikhuijzer/transformrs/pull/3)).
+- Text to image ([#4](https://github.com/transformrs/transformrs/pull/4)).
+- Text to speech ([#3](https://github.com/transformrs/transformrs/pull/3)).
 
 ### Changed
 
@@ -88,11 +100,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[0.6.1]: https://github.com/rikhuijzer/transformrs/compare/v0.6.0...v0.6.1
-[0.6.0]: https://github.com/rikhuijzer/transformrs/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/rikhuijzer/transformrs/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/rikhuijzer/transformrs/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/rikhuijzer/transformrs/compare/v0.2.1...v0.3.0
-[0.2.1]: https://github.com/rikhuijzer/transformrs/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/rikhuijzer/transformrs/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/rikhuijzer/transformrs/releases/tag/v0.1.0
+[0.7.0]: https://github.com/transformrs/transformrs/compare/v0.6.1...v0.7.0
+[0.6.1]: https://github.com/transformrs/transformrs/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/transformrs/transformrs/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/transformrs/transformrs/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/transformrs/transformrs/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/transformrs/transformrs/compare/v0.2.1...v0.3.0
+[0.2.1]: https://github.com/transformrs/transformrs/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/transformrs/transformrs/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/transformrs/transformrs/releases/tag/v0.1.0
