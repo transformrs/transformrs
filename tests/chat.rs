@@ -165,7 +165,7 @@ async fn test_chat_completion_no_stream_hyperbolic_error() {
 
 #[tokio::test]
 async fn test_chat_completion_no_stream_google() {
-    test_hello_chat_completion_no_stream(Provider::Google, "gemini-1.5-flash")
+    test_hello_chat_completion_no_stream(Provider::Google, "gemini-2.0-flash-lite")
         .await
         .unwrap();
 }
@@ -239,7 +239,7 @@ async fn test_chat_completion_stream_google() {
     let key = transformrs::load_keys(".env")
         .for_provider(&provider)
         .unwrap();
-    chat_completion_stream_helper(&provider, &key, "gemini-1.5-flash")
+    chat_completion_stream_helper(&provider, &key, "gemini-2.0-flash-lite")
         .await
         .unwrap();
 }
