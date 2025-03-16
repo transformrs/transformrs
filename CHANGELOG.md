@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2025-03-16
+
+### Added
+
+- Support for ElevenLabs text-to-speech ([#27](https://github.com/transformrs/transformrs/pull/27)).
+- Implement `Provider::from_str` ([#27](https://github.com/transformrs/transformrs/pull/27)).
+
 ## [0.7.0] - 2025-02-22
 
 ### Added
