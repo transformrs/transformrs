@@ -32,7 +32,7 @@ async fn tts_helper(
     let resp = transformrs::text_to_speech::tts(provider, &key, config, model, msg)
         .await
         .unwrap();
-    resp.structured()
+    resp.structured().await
 }
 
 #[tokio::test]
@@ -172,7 +172,6 @@ async fn test_tts_google() {
 #[tokio::test]
 async fn test_tts_elevenlabs() {
     let config = transformrs::text_to_speech::TTSConfig {
-        speed: Some(1.2),
         voice: Some("nPczCjzI2devNBz1zQrb".to_string()),
         ..Default::default()
     };
