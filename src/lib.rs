@@ -78,6 +78,7 @@ impl Provider {
             Provider::Azure => "https://api.azure.com",
             Provider::Cerebras => "https://api.cerebras.ai",
             Provider::DeepInfra => "https://api.deepinfra.com",
+            Provider::ElevenLabs => "https://api.elevenlabs.io",
             Provider::Fireworks => "https://api.fireworks.ai",
             Provider::FriendliAI => "https://api.friendli.ai",
             Provider::Google => "https://generativelanguage.googleapis.com",
@@ -97,6 +98,41 @@ impl Provider {
         match self {
             Provider::OpenAICompatible(_) => "OPENAI_COMPATIBLE_KEY".to_string(),
             _ => self.to_string().to_uppercase() + "_KEY",
+        }
+    }
+    pub fn from_str(s: &str) -> Result<Provider, Box<dyn Error + Send + Sync>> {
+        let s = s.to_lowercase();
+        if s.starts_with("openai-compatible(") {
+            let s = s.strip_prefix("openai-compatible(").unwrap();
+            let s = s.strip_suffix(")").unwrap();
+            let mut domain = s.to_string();
+            if !domain.starts_with("https") {
+                if domain.contains("localhost") {
+                    domain = format!("http://{}", domain);
+                } else {
+                    domain = format!("https://{}", domain);
+                }
+            }
+            return Ok(Provider::OpenAICompatible(domain));
+        }
+        match s.as_str() {
+            "amazon" => Ok(Provider::Amazon),
+            "azure" => Ok(Provider::Azure),
+            "cerebras" => Ok(Provider::Cerebras),
+            "deepinfra" => Ok(Provider::DeepInfra),
+            "elevenlabs" => Ok(Provider::ElevenLabs),
+            "fireworks" => Ok(Provider::Fireworks),
+            "friendliai" => Ok(Provider::FriendliAI),
+            "google" => Ok(Provider::Google),
+            "groq" => Ok(Provider::Groq),
+            "hyperbolic" => Ok(Provider::Hyperbolic),
+            "mistral" => Ok(Provider::Mistral),
+            "nebi" => Ok(Provider::Nebius),
+            "novita" => Ok(Provider::Novita),
+            "openai" => Ok(Provider::OpenAI),
+            "sambanova" => Ok(Provider::SambaNova),
+            "togetherai" => Ok(Provider::TogetherAI),
+            _ => Err(format!("Unsupported provider: {s}.").into()),
         }
     }
 }
