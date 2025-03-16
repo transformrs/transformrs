@@ -47,6 +47,7 @@ pub enum Provider {
     Azure,
     Cerebras,
     DeepInfra,
+    ElevenLabs,
     Fireworks,
     FriendliAI,
     Google,

@@ -170,6 +170,19 @@ async fn test_tts_google() {
 }
 
 #[tokio::test]
+async fn test_tts_elevenlabs() {
+    let config = transformrs::text_to_speech::TTSConfig {
+        speed: Some(1.2),
+        ..Default::default()
+    };
+    let model = Some("nPczCjzI2devNBz1zQrb");
+    let provider = Provider::ElevenLabs;
+    let speech = tts_helper(&provider, &config, model).await.unwrap();
+    let mut file = File::create("tests/tmp-elevenlabs.mp3").unwrap();
+    file.write_all(&speech.audio.clone()).unwrap();
+}
+
+#[tokio::test]
 async fn test_tts_google_error() {
     let config = transformrs::text_to_speech::TTSConfig::default();
     let model = Some("foobar");

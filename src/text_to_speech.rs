@@ -20,8 +20,9 @@ use std::error::Error;
 pub struct TTSConfig {
     pub output_format: Option<String>,
     pub voice: Option<String>,
-    pub speed: Option<f32>,
+    pub speed: Option<f64>,
     pub language_code: Option<String>,
+    pub seed: Option<u64>,
     pub other: Option<HashMap<String, Value>>,
 }
 

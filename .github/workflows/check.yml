@@ -43,11 +43,12 @@ jobs:
           cargo run --example text-to-speech
         env:
           DEEPINFRA_KEY: ${{ secrets.DEEPINFRA_KEY }}
+          ELEVENLABS_KEY: ${{ secrets.ELEVENLABS_KEY }}
           GOOGLE_KEY: ${{ secrets.GOOGLE_KEY }}
           GROQ_KEY: ${{ secrets.GROQ_KEY }}
           HYPERBOLIC_KEY: ${{ secrets.HYPERBOLIC_KEY }}
-          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
           OPENAI_COMPATIBLE_KEY: ${{ secrets.OPENAI_COMPATIBLE_KEY }}
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
 
       - run: RUSTDOCFLAGS="-D warnings" cargo doc
 
