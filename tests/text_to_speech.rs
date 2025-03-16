@@ -27,7 +27,7 @@ async fn tts_helper(
 ) -> Result<Speech, Box<dyn Error + Send + Sync>> {
     common::init_tracing();
     let keys = transformrs::load_keys(".env");
-    let key = keys.for_provider(&provider).unwrap();
+    let key = keys.for_provider(&provider).expect("key not found");
     let msg = "Hello, world!";
     let resp = transformrs::text_to_speech::tts(provider, &key, config, model, msg)
         .await
@@ -173,9 +173,10 @@ async fn test_tts_google() {
 async fn test_tts_elevenlabs() {
     let config = transformrs::text_to_speech::TTSConfig {
         speed: Some(1.2),
+        voice: Some("nPczCjzI2devNBz1zQrb".to_string()),
         ..Default::default()
     };
-    let model = Some("nPczCjzI2devNBz1zQrb");
+    let model = Some("eleven_multilingual_v2");
     let provider = Provider::ElevenLabs;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
     let mut file = File::create("tests/tmp-elevenlabs.mp3").unwrap();

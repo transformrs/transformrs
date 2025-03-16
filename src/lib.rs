@@ -8,6 +8,7 @@ pub mod text_to_speech;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use reqwest::header::HeaderMap;
+use std::str::FromStr;
 use reqwest::header::HeaderValue;
 use serde::Deserialize;
 use serde::Serialize;
@@ -100,7 +101,12 @@ impl Provider {
             _ => self.to_string().to_uppercase() + "_KEY",
         }
     }
-    pub fn from_str(s: &str) -> Result<Provider, Box<dyn Error + Send + Sync>> {
+}
+
+impl FromStr for Provider {
+    type Err = Box<dyn Error + Send + Sync>;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s = s.to_lowercase();
         if s.starts_with("openai-compatible(") {
             let s = s.strip_prefix("openai-compatible(").unwrap();
@@ -309,16 +315,21 @@ pub fn load_keys(path: &str) -> Keys {
     let providers = [
         Provider::Amazon,
         Provider::Azure,
+        Provider::Cerebras,
         Provider::DeepInfra,
+        Provider::ElevenLabs,
         Provider::Fireworks,
         Provider::FriendliAI,
         Provider::Google,
         Provider::Groq,
         Provider::Hyperbolic,
+        Provider::Mistral,
         Provider::Nebius,
         Provider::Novita,
         Provider::OpenAI,
         Provider::OpenAICompatible("".to_string()),
+        Provider::SambaNova,
+        Provider::TogetherAI,
     ];
     for provider in providers {
         if let Ok(key_value) = std::env::var(provider.key_name()) {
