@@ -8,6 +8,8 @@ use crate::Provider;
 use base64::prelude::*;
 use bytes::Bytes;
 use reqwest;
+use reqwest::header::HeaderMap;
+use reqwest::header::HeaderValue;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
@@ -20,8 +22,9 @@ use std::error::Error;
 pub struct TTSConfig {
     pub output_format: Option<String>,
     pub voice: Option<String>,
-    pub speed: Option<f32>,
+    pub speed: Option<f64>,
     pub language_code: Option<String>,
+    pub seed: Option<u64>,
     pub other: Option<HashMap<String, Value>>,
 }
 
@@ -29,8 +32,21 @@ fn is_openai_compatible(provider: &Provider) -> bool {
     matches!(provider, Provider::OpenAICompatible(_))
 }
 
-fn address(provider: &Provider, key: &Key, model: Option<&str>) -> String {
-    if provider == &Provider::DeepInfra {
+fn address(provider: &Provider, key: &Key, model: Option<&str>, config: &TTSConfig) -> String {
+    if provider == &Provider::ElevenLabs {
+        let voice = config
+            .voice
+            .as_ref()
+            .expect("voice is required for ElevenLabs");
+        if let Some(output_format) = &config.output_format {
+            format!(
+                "{}/v1/text-to-speech/{voice}?{output_format}",
+                provider.domain()
+            )
+        } else {
+            format!("{}/v1/text-to-speech/{voice}", provider.domain())
+        }
+    } else if provider == &Provider::DeepInfra {
         let model = model.unwrap_or("hexgrad/Kokoro-82M");
         format!("{}/v1/inference/{}", provider.domain(), model)
     } else if provider == &Provider::Hyperbolic {
@@ -97,7 +113,13 @@ impl SpeechResponse {
         Ok(serde_json::from_slice::<Value>(&self.resp)?)
     }
     pub fn structured(&self) -> Result<Speech, Box<dyn Error + Send + Sync>> {
-        if self.provider == Provider::DeepInfra {
+        if self.provider == Provider::ElevenLabs {
+            Ok(Speech {
+                request_id: None,
+                file_format: "mp3".to_string(),
+                audio: self.resp.clone(),
+            })
+        } else if self.provider == Provider::DeepInfra {
             let resp = self.raw_value()?;
             tracing::debug!("Response: {resp}");
             if resp.get("detail").is_some() {
@@ -155,14 +177,40 @@ impl SpeechResponse {
     }
 }
 
-pub async fn tts(
-    provider: &Provider,
-    key: &Key,
-    config: &TTSConfig,
-    model: Option<&str>,
-    text: &str,
-) -> Result<SpeechResponse, Box<dyn Error + Send + Sync>> {
-    let address = address(provider, key, model);
+fn tts_headers(provider: &Provider, key: &Key) -> Result<HeaderMap, Box<dyn Error + Send + Sync>> {
+    let headers = if provider == &Provider::Google {
+        let mut headers = request_headers(key)?;
+        headers.remove("Authorization");
+        headers
+    } else if provider == &Provider::ElevenLabs {
+        let mut headers = request_headers(key)?;
+        headers.insert("xi-api-key", HeaderValue::from_str(&key.key)?);
+        headers.remove("Authorization");
+        headers
+    } else {
+        request_headers(key)?
+    };
+    Ok(headers)
+}
+
+fn tts_body(config: &TTSConfig, provider: &Provider, model: Option<&str>, text: &str) -> Value {
+    if provider == &Provider::ElevenLabs {
+        let mut body = json!({});
+        body["text"] = Value::String(text.to_string());
+        if let Some(model) = &model {
+            body["model_id"] = Value::String(model.to_string());
+        }
+        if let Some(language_code) = &config.language_code {
+            body["language_code"] = Value::String(language_code.clone());
+        }
+        if let Some(_speed) = &config.speed {
+            panic!("Set speed for ElevenLabs via stored settings for voice.");
+        }
+        if let Some(seed) = &config.seed {
+            body["seed"] = Value::String(seed.to_string());
+        }
+        return body;
+    }
     let mut body = json!({});
     if provider == &Provider::OpenAI || is_openai_compatible(provider) {
         body["input"] = Value::String(text.to_string());
@@ -208,13 +256,19 @@ pub async fn tts(
             body[key] = value.clone();
         }
     }
-    let headers = if provider == &Provider::Google {
-        let mut headers = request_headers(key)?;
-        headers.remove("Authorization");
-        headers
-    } else {
-        request_headers(key)?
-    };
+    body
+}
+
+pub async fn tts(
+    provider: &Provider,
+    key: &Key,
+    config: &TTSConfig,
+    model: Option<&str>,
+    text: &str,
+) -> Result<SpeechResponse, Box<dyn Error + Send + Sync>> {
+    let address = address(provider, key, model, config);
+    let headers = tts_headers(provider, key)?;
+    let body = tts_body(config, provider, model, text);
     tracing::debug!("Requesting {address} for text-to-speech with {body}");
     let client = reqwest::Client::new();
     let resp = client

@@ -7,6 +7,7 @@ For examples, see [`examples/`](https://github.com/transformrs/transformrs/tree/
 Provider | Chat* | Text to Image | Text to Speech
 --: | --- | --- | ---
 Cerebras | x |
+ElevenLabs | | | x
 DeepInfra | x | x | x
 Google | x |  | [x](#google-cloud-api)
 Groq | x |
@@ -16,11 +17,17 @@ Other** | x
 SambaNova | x |
 TogetherAI | x |
 
-For a command line tool that uses this library, see [trf](https://github.com/transformrs/trf).
 
 \*Chat supports streaming and image input.
 
 \*\*Other OpenAI-compatible providers can be used via `Provider::Other(base_url)`.
+
+## Users 
+
+Projects that use this library:
+
+- [trf](https://github.com/transformrs/trf) - A command line tool to interact with AI providers.
+- [trv](https://github.com/transformrs/trv) - A command line tool to create videos from slides and text.
 
 ## Why was this Project Created?
 
