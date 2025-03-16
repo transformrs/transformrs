@@ -5,11 +5,11 @@
 use crate::request_headers;
 use crate::Key;
 use crate::Provider;
-use reqwest::header::HeaderMap;
-use reqwest::header::HeaderValue;
 use base64::prelude::*;
 use bytes::Bytes;
 use reqwest;
+use reqwest::header::HeaderMap;
+use reqwest::header::HeaderValue;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::json;
@@ -32,14 +32,12 @@ fn is_openai_compatible(provider: &Provider) -> bool {
     matches!(provider, Provider::OpenAICompatible(_))
 }
 
-fn address(
-    provider: &Provider,
-    key: &Key,
-    model: Option<&str>,
-    config: &TTSConfig,
-) -> String {
+fn address(provider: &Provider, key: &Key, model: Option<&str>, config: &TTSConfig) -> String {
     if provider == &Provider::ElevenLabs {
-        let voice = config.voice.as_ref().expect("voice is required for ElevenLabs");
+        let voice = config
+            .voice
+            .as_ref()
+            .expect("voice is required for ElevenLabs");
         if let Some(output_format) = &config.output_format {
             format!(
                 "{}/v1/text-to-speech/{voice}?{output_format}",
@@ -116,11 +114,11 @@ impl SpeechResponse {
     }
     pub fn structured(&self) -> Result<Speech, Box<dyn Error + Send + Sync>> {
         if self.provider == Provider::ElevenLabs {
-            return Ok(Speech {
+            Ok(Speech {
                 request_id: None,
                 file_format: "mp3".to_string(),
                 audio: self.resp.clone(),
-            });
+            })
         } else if self.provider == Provider::DeepInfra {
             let resp = self.raw_value()?;
             tracing::debug!("Response: {resp}");

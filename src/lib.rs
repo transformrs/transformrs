@@ -8,7 +8,6 @@ pub mod text_to_speech;
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use reqwest::header::HeaderMap;
-use std::str::FromStr;
 use reqwest::header::HeaderValue;
 use serde::Deserialize;
 use serde::Serialize;
@@ -16,6 +15,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::Read;
+use std::str::FromStr;
 
 pub(crate) fn request_headers(key: &Key) -> Result<HeaderMap, Box<dyn Error + Send + Sync>> {
     let mut headers = HeaderMap::new();
