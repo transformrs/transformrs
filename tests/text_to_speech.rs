@@ -32,7 +32,7 @@ async fn tts_helper(
     let resp = transformrs::text_to_speech::tts(provider, &key, config, model, msg)
         .await
         .unwrap();
-    resp.structured().await
+    resp.structured()
 }
 
 #[tokio::test]

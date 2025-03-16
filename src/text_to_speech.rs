@@ -114,27 +114,13 @@ impl SpeechResponse {
     pub fn raw_value(&self) -> Result<Value, Box<dyn Error + Send + Sync>> {
         Ok(serde_json::from_slice::<Value>(&self.resp)?)
     }
-    pub async fn structured(&self) -> Result<Speech, Box<dyn Error + Send + Sync>> {
+    pub fn structured(&self) -> Result<Speech, Box<dyn Error + Send + Sync>> {
         if self.provider == Provider::ElevenLabs {
-            println!("here");
-            if let Ok(text) = std::str::from_utf8(&self.resp) {
-                println!("text: {text}");
-                if text.starts_with("blob:") {
-                    let url = text.split("blob:").nth(1).unwrap();
-                    let audio = reqwest::get(url).await?.bytes().await?;
-                    return Ok(Speech {
-                        request_id: None,
-                        file_format: "mp3".to_string(),
-                        audio,
-                    });
-                } else {
-                    return Err(format!("No blob URL found in response, got: {text}").into());
-                }
-            } else {
-                println!("here2");
-                let json = self.raw_value()?;
-                return Err(format!("No blob URL found in response: {json}").into());
-            }
+            return Ok(Speech {
+                request_id: None,
+                file_format: "mp3".to_string(),
+                audio: self.resp.clone(),
+            });
         } else if self.provider == Provider::DeepInfra {
             let resp = self.raw_value()?;
             tracing::debug!("Response: {resp}");
