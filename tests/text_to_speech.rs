@@ -171,8 +171,13 @@ async fn test_tts_google() {
 
 #[tokio::test]
 async fn test_tts_elevenlabs() {
+    let mut other = HashMap::new();
+    other.insert("previous_text".to_string(), json!("Some previous text."));
+    other.insert("next_text".to_string(), json!("Some next text."));
     let config = transformrs::text_to_speech::TTSConfig {
         voice: Some("nPczCjzI2devNBz1zQrb".to_string()),
+        seed: Some(42),
+        other: Some(other),
         ..Default::default()
     };
     let model = Some("eleven_multilingual_v2");
