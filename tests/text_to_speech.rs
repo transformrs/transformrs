@@ -180,7 +180,7 @@ async fn test_tts_elevenlabs() {
         other: Some(other),
         ..Default::default()
     };
-    let model = Some("eleven_multilingual_v2");
+    let model = Some("eleven_turbo_v2_5");
     let provider = Provider::ElevenLabs;
     let speech = tts_helper(&provider, &config, model).await.unwrap();
     let mut file = File::create("tests/tmp-elevenlabs.mp3").unwrap();
