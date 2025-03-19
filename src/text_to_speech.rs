@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use std::error::Error;
 
 /// Text-to-speech config
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
 pub struct TTSConfig {
     pub output_format: Option<String>,
     pub voice: Option<String>,
@@ -26,6 +26,23 @@ pub struct TTSConfig {
     pub language_code: Option<String>,
     pub seed: Option<u64>,
     pub other: Option<HashMap<String, Value>>,
+}
+
+#[test]
+fn test_ttsconfig_eq() {
+    for _ in 0..100 {
+        let mut a = TTSConfig::default();
+        let mut a_map = HashMap::new();
+        a_map.insert("foo".to_string(), json!("bar"));
+        a_map.insert("baz".to_string(), json!("qux"));
+        a.other = Some(a_map);
+        let mut b = TTSConfig::default();
+        let mut b_map = HashMap::new();
+        b_map.insert("foo".to_string(), json!("bar"));
+        b_map.insert("baz".to_string(), json!(42));
+        b.other = Some(b_map);
+        assert_eq!(a, b);
+    }
 }
 
 fn is_openai_compatible(provider: &Provider) -> bool {
