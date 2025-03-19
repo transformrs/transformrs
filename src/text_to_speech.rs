@@ -68,8 +68,8 @@ fn test_ttsconfig_eq() {
         a.other = Some(a_map);
         let mut b = TTSConfig::default();
         let mut b_map = HashMap::new();
-        b_map.insert("foo".to_string(), json!("bar"));
         b_map.insert("baz".to_string(), json!(42));
+        b_map.insert("foo".to_string(), json!("bar"));
         b.other = Some(b_map);
         assert_eq!(a, b, "during iteration {i}");
     }
