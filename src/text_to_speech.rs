@@ -18,7 +18,7 @@ use std::collections::HashMap;
 use std::error::Error;
 
 /// Text-to-speech config
-#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct TTSConfig {
     pub output_format: Option<String>,
     pub voice: Option<String>,
@@ -28,20 +28,50 @@ pub struct TTSConfig {
     pub other: Option<HashMap<String, Value>>,
 }
 
+impl PartialEq for TTSConfig {
+    fn eq(&self, other: &Self) -> bool {
+        fn compare_hashmap(
+            a: &Option<HashMap<String, Value>>,
+            b: &Option<HashMap<String, Value>>,
+        ) -> bool {
+            match (a, b) {
+                (Some(a), Some(b)) => {
+                    let mut a_keys: Vec<_> = a.keys().collect();
+                    let mut b_keys: Vec<_> = b.keys().collect();
+                    a_keys.sort();
+                    b_keys.sort();
+                    if a_keys != b_keys {
+                        return false;
+                    }
+                    a_keys.iter().all(|key| a.get(*key) == b.get(*key))
+                }
+                (None, None) => true,
+                _ => false,
+            }
+        }
+        self.output_format == other.output_format
+            && self.voice == other.voice
+            && self.speed == other.speed
+            && self.language_code == other.language_code
+            && self.seed == other.seed
+            && compare_hashmap(&self.other, &other.other)
+    }
+}
+
 #[test]
 fn test_ttsconfig_eq() {
-    for _ in 0..100 {
+    for i in 0..100 {
         let mut a = TTSConfig::default();
         let mut a_map = HashMap::new();
         a_map.insert("foo".to_string(), json!("bar"));
-        a_map.insert("baz".to_string(), json!("qux"));
+        a_map.insert("baz".to_string(), json!(42));
         a.other = Some(a_map);
         let mut b = TTSConfig::default();
         let mut b_map = HashMap::new();
         b_map.insert("foo".to_string(), json!("bar"));
         b_map.insert("baz".to_string(), json!(42));
         b.other = Some(b_map);
-        assert_eq!(a, b);
+        assert_eq!(a, b, "during iteration {i}");
     }
 }
 
