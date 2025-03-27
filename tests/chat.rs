@@ -147,9 +147,14 @@ async fn test_chat_completion_no_stream_groq_error() {
     assert!(err.to_string().contains("does not exist"));
 }
 
+fn hyperbolic_model() -> &'static str {
+    "meta-llama/Meta-Llama-3.1-70B-Instruct"
+}
+
 #[tokio::test]
 async fn test_chat_completion_no_stream_hyperbolic() {
-    test_hello_chat_completion_no_stream(Provider::Hyperbolic, MODEL)
+    let model = &hyperbolic_model();
+    test_hello_chat_completion_no_stream(Provider::Hyperbolic, model)
         .await
         .unwrap();
 }
@@ -247,10 +252,11 @@ async fn test_chat_completion_stream_google() {
 #[tokio::test]
 async fn test_chat_completion_stream_hyperbolic() {
     let provider = Provider::Hyperbolic;
+    let model = &hyperbolic_model();
     let key = transformrs::load_keys(".env")
         .for_provider(&provider)
         .unwrap();
-    chat_completion_stream_helper(&provider, &key, MODEL)
+    chat_completion_stream_helper(&provider, &key, model)
         .await
         .unwrap();
 }
