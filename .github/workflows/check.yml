@@ -16,10 +16,19 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
 
+    # Using only official GitHub Actions for security reasons.
     steps:
       - uses: actions/checkout@v4
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - run: rustup toolchain install ${{ env.RUST_TOOLCHAIN }}
 
