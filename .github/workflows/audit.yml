@@ -20,6 +20,7 @@ jobs:
       - run: >
           jas install --gh rustsec/rustsec@cargo-audit/v0.21.2
           --sha 5eaad156124e01d54ce937cbb2c069a8145b01e7fa29aef62bef1b386b4c1519
+          --archive-filename cargo-audit
           --gh-token ${{ secrets.GITHUB_TOKEN }}
       - run: cargo-audit audit
 
