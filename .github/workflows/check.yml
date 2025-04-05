@@ -61,7 +61,7 @@ jobs:
     if: github.ref != 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-      - run: cargo install --debug --path .
+      - run: cargo install --debug jas@0.2.0
       - run: >
           jas install
           --gh crate-ci/typos@v1.31.1
