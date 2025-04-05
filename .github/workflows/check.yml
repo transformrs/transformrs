@@ -55,7 +55,6 @@ jobs:
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
       - run: RUSTDOCFLAGS="-D warnings" cargo doc
 
-
   typos:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
