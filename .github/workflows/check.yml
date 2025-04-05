@@ -19,7 +19,6 @@ jobs:
     # Using only official GitHub Actions for security reasons.
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/cache@v4
         with:
           path: |
@@ -29,12 +28,8 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
       - run: rustup toolchain install ${{ env.RUST_TOOLCHAIN }}
-
-      # Compile, but don't run.
       - run: cargo test --no-run
-
       - run: |
           cargo test --all-features
 
@@ -58,32 +53,28 @@ jobs:
           HYPERBOLIC_KEY: ${{ secrets.HYPERBOLIC_KEY }}
           OPENAI_COMPATIBLE_KEY: ${{ secrets.OPENAI_COMPATIBLE_KEY }}
           OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-
       - run: RUSTDOCFLAGS="-D warnings" cargo doc
-
 
   typos:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     if: github.ref != 'refs/heads/main'
-
     steps:
       - uses: actions/checkout@v4
-
-      - uses: crate-ci/typos@master
-        with:
-          files: '.'
+      - run: cargo install --debug jas@0.2.0
+      - run: >
+          jas install
+          --gh crate-ci/typos@v1.31.1
+          --sha f683c2abeaff70379df7176110100e18150ecd17a4b9785c32908aca11929993
+          --gh-token ${{ secrets.GITHUB_TOKEN }}
+      - run: typos .
 
   fmt:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     if: github.ref != 'refs/heads/main'
-
     steps:
       - uses: actions/checkout@v4
-
       - run: rustup toolchain install stable
-
       - run: cargo fmt --all --check
-
       - run: cargo clippy -- -Dwarnings
