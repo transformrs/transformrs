@@ -193,10 +193,7 @@ fn process_line(line: &str) -> Option<ChatCompletionChunk> {
         if json_str == "[DONE]" {
             return None;
         }
-        match serde_json::from_str::<ChatCompletionChunk>(json_str) {
-            Ok(chunk) => Some(chunk),
-            Err(_) => None,
-        }
+        serde_json::from_str::<ChatCompletionChunk>(json_str).ok()
     } else {
         None
     }
