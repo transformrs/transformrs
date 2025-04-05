@@ -32,7 +32,7 @@ jobs:
       - run: cargo test --no-run
       - run: |
           cargo test --all-features
-          
+
           echo "Running chat example"
           cargo run --example chat
           echo "Running debug example"
